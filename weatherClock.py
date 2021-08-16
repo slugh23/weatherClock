@@ -37,7 +37,6 @@ day = None
 hourCursor = 0
 
 def fetch_weather_data(owm_url):
-    print("fetching weather")
     res = requests.get(owm_url)
     weather_data = res.json()
     with open("/tmp/weather.json", "w") as cache:
@@ -63,7 +62,7 @@ cursor_x = 0
 cursor_y = 0
 cursor_xform = 1
 if "invert-cursor" in settings:
-    cursor_xform = settings["invert-cursor"] if -1 else 1
+    cursor_xform = -1 if settings["invert-cursor"] else 1
 
 # create our drawing pen
 pen = turtle.Turtle()
