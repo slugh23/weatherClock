@@ -1,3 +1,4 @@
+import os
 import time
 import turtle
 import math
@@ -67,7 +68,7 @@ if "invert-cursor" in settings:
 # create our drawing pen
 pen = turtle.Turtle()
 pen.hideturtle()
-pen.speed(0) # 0 is fastest it can go
+pen.speed(0)
 pen.pensize(3)
 
 weatherText = turtle.Turtle()
@@ -88,13 +89,6 @@ dateText = turtle.Turtle()
 dateText.hideturtle()
 dateText.penup()
 
-extraText = turtle.Turtle()
-extraText.hideturtle()
-extraText.penup()
-
-
-mode = CLOCK_MODE # 1 - hourly detail mode, 0 - analog clock face mode
-
 hourlyTouchSize = 180 # determines radius for user touch when going into hourly detail mode
 
 hours = []
@@ -105,8 +99,11 @@ for i in range(60, -300, -30):
 wn = turtle.Screen()
 wn.bgcolor("black")
 wn.screensize()
-wn.setup(width=720, height=720)
-#wn.setup(width = 1.0, height = 1.0) # Make fullscreen
+
+if "screen" in settings:
+    wn.setup(width=settings["screen"]["width"], height=settings["screen"]["height"])
+else:
+    wn.setup(width = 1.0, height = 1.0)
 
 wn.title("WeatherClock 0.0.0")
 wn.tracer(0)
