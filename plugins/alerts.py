@@ -4,14 +4,20 @@ PADDING = 5
 HCHAR = 20
 WCHAR = 9
 
-dot = turtle.Turtle()
-dot.hideturtle()
-dot.speed(0)
-dot.pensize(3)
 txt = turtle.Turtle()
 txt.hideturtle()
 txt.speed(0)
 txt.pensize(3)
+
+alt = turtle.Turtle()
+alt.speed(0)
+alt.penup()
+alt.goto(-280,275)
+alt.hideturtle()
+
+alert_name = "plugins/icons/alert-64.gif"
+alt.getscreen().addshape(alert_name)
+alt.shape(alert_name)
 
 MsgFont = ("Inconsolata", 14, "bold")
 
@@ -68,24 +74,16 @@ def close_alert():
 
 def update(data):
     global active, alertable
-    dot.clear()
     if "alerts" in data:
-        dot.penup()
-        dot.goto(-280, 300)
-        dot.setheading(180)
-        dot.pendown()
-        dot.pencolor("white")
-        dot.fillcolor("red")
-        dot.begin_fill()
-        dot.circle(30, None, 3)
-        dot.end_fill()
-        #dot.write("!", align="center", font=("Inconsolata", 24, "bold"))
+        #alt.shape(alert_name)
+        alt.showturtle()
         alertable = True
         if active:
             display_alert(data["alerts"][0])
         else:
             close_alert()
     else:
+        alt.hideturtle()
         alertable = False
 
 def click(x, y):
