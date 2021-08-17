@@ -168,7 +168,7 @@ def draw_weather_text(hourTouched):
     if 'rain' not in fc:
         weatherText.write("--", align="left", font=("Verdana", weatherText_DataFontSize, "bold"))
     else:
-        weatherText.write(str(round_half_up(fc["rain"]["1h"] * 25.4, 2)) + " in", align="left", font=("Verdana", weatherText_DataFontSize, "bold"))
+        weatherText.write(str(round_half_up(fc["rain"]["1h"] / 25.4, 2)) + " in", align="left", font=("Verdana", weatherText_DataFontSize, "bold"))
 
     weatherText.goto(weatherText_Description, -weatherText_vertSpacing*3)
     weatherText.write("Wind", align="right", font=("Verdana", weatherText_DescriptionFontSize, "bold")) # Wind
@@ -266,6 +266,8 @@ def clock_click(x, y):
 
     cursor_x = x * cursor_xform
     cursor_y = y * cursor_xform
+
+    print(f"Click! ({cursor_x}, {cursor_y})")
 
     hourTouched = False
 
@@ -390,7 +392,7 @@ while True:
         dateText.clear()
         dateText.color("white")
         dateText.setheading(270)
-        dateText.goto(190,28)
+        dateText.goto(186,28)
         dateText.write(time.strftime("%b").upper(), align="center", font=("Verdana", 18, "bold"))
         dateText.fd(68)
         dateText.write(day, align="center", font=("Verdana", 48, "normal"))
