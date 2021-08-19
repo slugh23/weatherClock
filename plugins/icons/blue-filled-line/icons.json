@@ -1,0 +1,58 @@
+[
+    {
+        "images": ["clear sky day", "clear sky night"],
+        "codes": [800]
+    },
+    {
+        "images": ["few clouds day", "few clouds night"],
+        "codes": [801]
+    },
+    {
+        "images": ["scattered clouds", "scattered clouds"],
+        "codes": [802, 803]
+    },
+    {
+        "images": ["overcast", "overcast"],
+        "codes": [804]
+    },
+    {
+        "images": ["wind", "wind"],
+        "codes": [771, 781]
+    },
+    {
+        "images": ["mist", "mist"],
+        "codes": [701, 711, 721, 731, 741, 751, 761, 762]
+    },
+    {
+        "images": ["snow", "snow"],
+        "codes": [600, 601, 602]
+    },
+    {
+        "images": ["snow2", "snow2"],
+        "codes": [611, 612, 613, 615, 616, 620, 621, 622]
+    },
+    {
+        "images": ["thunderstorm day", "thunderstorm night"],
+        "codes": [200, 201, 202, 210, 211, 212, 221, 230, 231, 232]
+    },
+    {
+        "images": ["shower", "shower"],
+        "codes": [520, 521, 522, 531, 313]
+    },
+    {
+        "images": ["rain day", "rain night"],
+        "codes": [500, 311]
+    },
+    {
+        "images": ["heavy rain", "heavy rain"],
+        "codes": [502, 503, 504, 511, 314, 321]
+    },
+    {
+        "images": ["moderate rain day", "rain"],
+        "codes": [501, 312]
+    },
+    {
+        "images": ["drizzle day", "drizzle night"],
+        "codes": [300, 301, 302, 310]
+    }
+]

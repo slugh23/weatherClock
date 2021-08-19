@@ -37,6 +37,9 @@ day = None
 
 hourCursor = 0
 
+forecast.icon_set_name = "blue-filled-line"
+forecast.initialize()
+
 def fetch_weather_data(owm_url):
     res = requests.get(owm_url)
     weather_data = res.json()
@@ -183,10 +186,10 @@ def draw_weather_text(hourTouched):
     weatherText.write(str(round_half_up(fc["wind_gust"] * 0.6213712, 1)) + " mph", align="left", font=("Verdana", weatherText_DataFontSize, "bold"))
 
     weatherText.goto(weatherText_Description, -weatherText_vertSpacing*5)
-    weatherText.write("icon", align="right", font=("Verdana", weatherText_DescriptionFontSize, "bold")) # Wind
+    weatherText.write("code", align="right", font=("Verdana", weatherText_DescriptionFontSize, "bold")) # Wind
 
     weatherText.goto(weatherText_Data, -weatherText_vertSpacing*5)
-    weatherText.write(fc["weather"][0]["icon"], align="left", font=("Verdana", weatherText_DataFontSize, "bold"))
+    weatherText.write(fc["weather"][0]["id"], align="left", font=("Verdana", weatherText_DataFontSize, "bold"))
 
     weatherText.hideturtle()
 
@@ -213,7 +216,7 @@ def update_forecast():
     weather ID breakdown https://openweathermap.org/weather-conditions
     use https://ezgif.com/maker for gif conversion
     '''
-    global hourCursor
+    global hourCursor, data, idImage_array
 
     currentHour = int(time.strftime("%H"))
     if currentHour > 12:
@@ -223,6 +226,9 @@ def update_forecast():
     else:
         hourCursor = currentHour
 
+    idImage_array = forecast.get_image_array(data["hourly"])
+
+    '''
     for num in range(12):
         id_array[num] = data["hourly"][num]["weather"][0]["id"]
 
@@ -253,6 +259,7 @@ def update_forecast():
 
     for image in idImage_array:
         wn.addshape(image)
+    '''
 
 touch_fcn = None
 
