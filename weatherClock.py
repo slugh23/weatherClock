@@ -37,7 +37,9 @@ day = None
 
 hourCursor = 0
 
-forecast.icon_set_name = "blue-filled-line"
+if "icon-set-name" in settings:
+    forecast.icon_set_name = settings["icon-set-name"]
+
 forecast.initialize()
 
 def fetch_weather_data(owm_url):

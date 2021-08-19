@@ -5,11 +5,11 @@
     },
     {
         "images": ["few clouds day", "few clouds night"],
-        "codes": [801]
+        "codes": [801, 802]
     },
     {
         "images": ["scattered clouds", "scattered clouds"],
-        "codes": [802, 803]
+        "codes": [803]
     },
     {
         "images": ["overcast", "overcast"],

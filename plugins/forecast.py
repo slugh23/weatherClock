@@ -26,7 +26,8 @@ def get_image_array(hourly):
     global codes
     images = []
     for idx in range(12):
-        dn = 0 if hourly[idx]["weather"][0]["icon"][:-1] == "d" else 1
+        dork = hourly[idx]["weather"][0]["icon"][2]
+        dn = 0 if dork == "d" else 1
         icons = codes[hourly[idx]["weather"][0]["id"]]
         images.append(f"plugins/icons/{icon_set_name}/{icons[dn]}.gif")
     return images
