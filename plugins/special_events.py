@@ -149,9 +149,10 @@ def update(data):
     global active, alertable, evt
     events = get_events_today()
     if len(events):
-        evt.shape(get_pen_shape(events))
-        evt.stamp()
-        alertable = True
+        if not alertable:
+            evt.shape(get_pen_shape(events))
+            evt.stamp()
+            alertable = True
         if active:
             display_events(events)
         else:
