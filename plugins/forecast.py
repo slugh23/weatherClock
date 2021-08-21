@@ -5,11 +5,9 @@ import json
 icon_set_name = "owm-std"
 hour_touched = None
 
-wn = turtle.Screen()
-
 codes = {}
 
-def initialize():
+def initialize(screen):
     global codes
     with open(f"plugins/icons/{icon_set_name}/icons.json") as cfg:
         dork = cfg.read()
@@ -17,8 +15,8 @@ def initialize():
         for icon in icon_sets:
             for name in icon["images"]:
                 shape = f"plugins/icons/{icon_set_name}/{name}.gif"
-                if shape not in wn.getshapes():
-                    wn.addshape(shape)
+                if shape not in screen.getshapes():
+                    screen.addshape(shape)
             for code in icon["codes"]:
                 codes[code] = icon["images"]
 

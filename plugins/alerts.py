@@ -4,16 +4,16 @@ PADDING = 5
 HCHAR = 20
 WCHAR = 9
 
-txt = turtle.Turtle()
-txt.hideturtle()
+txt = turtle.Turtle(visible=False)
+#txt.hideturtle()
 txt.speed(0)
 txt.pensize(3)
 
-alt = turtle.Turtle()
+alt = turtle.Turtle(visible=False)
+#alt.hideturtle()
 alt.speed(0)
 alt.penup()
 alt.goto(-280,275)
-alt.hideturtle()
 
 alert_name = "plugins/icons/alert-64.gif"
 alt.getscreen().addshape(alert_name)

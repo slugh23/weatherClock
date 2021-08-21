@@ -7,7 +7,7 @@ from datetime import datetime
 from datetime import timedelta
 import json
 from plugins.utils import round_half_up
-from plugins import *
+from plugins import alerts, sun, forecast, special_events
 
 # currently set to Vancouver, BC CANADA
 #latitude = 49.2827
@@ -40,8 +40,6 @@ hourCursor = 0
 if "icon-set-name" in settings:
     forecast.icon_set_name = settings["icon-set-name"]
 
-forecast.initialize()
-
 def fetch_weather_data(owm_url):
     res = requests.get(owm_url)
     weather_data = res.json()
@@ -71,13 +69,12 @@ if "invert-cursor" in settings:
     cursor_xform = -1 if settings["invert-cursor"] else 1
 
 # create our drawing pen
-pen = turtle.Turtle()
-pen.hideturtle()
+pen = turtle.Turtle(visible=False)
+#pen.hideturtle()
 pen.speed(0)
 pen.pensize(3)
 
-weatherText = turtle.Turtle()
-weatherText.hideturtle()
+weatherText = turtle.Turtle(visible=False)
 weatherText_Description = -30
 weatherText_Data = 30
 weatherText_vertSpacing = 30
@@ -85,13 +82,11 @@ weatherText_DescriptionFontSize = 18
 weatherText_DataFontSize = 18
 sun.FontSize = weatherText_DataFontSize
 
-weatherDividerPen = turtle.Turtle()
-weatherDividerPen.hideturtle()
+weatherDividerPen = turtle.Turtle(visible=False)
 
 degree_sign = u"\N{DEGREE SIGN}"
 
-dateText = turtle.Turtle()
-dateText.hideturtle()
+dateText = turtle.Turtle(visible=False)
 dateText.penup()
 
 hourlyTouchSize = 180 # determines radius for user touch when going into hourly detail mode
@@ -101,7 +96,7 @@ for i in range(60, -300, -30):
     i_r = math.radians(i)
     hours.append((math.cos(i_r)*radius, math.sin(i_r)*radius))
 
-wn = turtle.Screen()
+wn = pen.getscreen()
 wn.bgcolor("black")
 wn.screensize()
 
@@ -112,6 +107,9 @@ else:
 
 wn.title("WeatherClock 0.0.0")
 wn.tracer(0)
+
+print(dir(forecast))
+forecast.initialize(wn)
 
 def touchInBox(touch_x, touch_y, center_x, center_y, size_x, size_y):
     if (touch_x > (center_x - size_x/2) and touch_x < (center_x + size_x/2) and touch_y > (center_y - size_y/2) and touch_y < (center_y + size_y/2)):
@@ -290,6 +288,9 @@ def clock_click(x, y):
         if alerts.click(cursor_x, cursor_y) != None:
             touch_fcn = alerts.click
             clock_mode = False
+        elif special_events.click(cursor_x, cursor_y) != None:
+            touch_fcn = special_events.click
+            clock_mode = False
         elif hourTouched:
             touch_fcn = forecast_click
             clock_mode = False
@@ -303,7 +304,8 @@ def clock_click(x, y):
 
 bg_hours = [None]*12
 for i in range(0, 12):
-    bg_hours[i] = turtle.Turtle()
+    bg_hours[i] = turtle.Turtle(visible=False)
+    bg_hours[i].penup()
     bg_hours[i].goto(hours[i][0], hours[i][1])
 
 
@@ -386,7 +388,7 @@ def draw_clock(h, m, s, pen): # draw a clock using the pen i created
     #pen.end_fill()
     '''
 
-turtle.onscreenclick(clock_click)
+wn.onscreenclick(clock_click)
 
 last_fetch = None
 
@@ -413,6 +415,7 @@ while True:
         
     alerts.update(data)
     sun.update(data)
+    special_events.update(data)
 
     if (m % weatherUpdatePeriod == 0 and s == 0):
         if m != last_fetch:
@@ -424,6 +427,7 @@ while True:
         update_forecast()
 
         for i in range(1, 13):
+            bg_hours[i-1].showturtle()
             if(i-hourCursor < 0):
                 bg_hours[i-1].shape(idImage_array[12-abs(i-hourCursor)])
             else:
