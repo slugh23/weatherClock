@@ -70,7 +70,6 @@ if "invert-cursor" in settings:
 
 # create our drawing pen
 pen = turtle.Turtle(visible=False)
-#pen.hideturtle()
 pen.speed(0)
 pen.pensize(3)
 
@@ -228,38 +227,6 @@ def update_forecast():
 
     idImage_array = forecast.get_image_array(data["hourly"])
 
-    '''
-    for num in range(12):
-        id_array[num] = data["hourly"][num]["weather"][0]["id"]
-
-        if 200 <= id_array[num] and id_array[num] <= 232:
-            idImage_array[num] = "plugins/icons/11d@2x.gif"
-        elif 300 <= id_array[num] and id_array[num] <= 321:
-            idImage_array[num] = "plugins/icons/09d@2x.gif"
-        elif 500 <= id_array[num] and id_array[num] <= 504:
-            idImage_array[num] = "plugins/icons/10d@2x.gif"
-        elif id_array[num] == 511:
-            idImage_array[num] = "plugins/icons/13d@2x.gif"
-        elif 520 <= id_array[num] and id_array[num] <= 531:
-            idImage_array[num] = "plugins/icons/09d@2x.gif"
-        elif 600 <= id_array[num] and id_array[num] <= 622:
-            idImage_array[num] = "plugins/icons/13d@2x.gif"
-        elif 701 <= id_array[num] and id_array[num] <= 781:
-            idImage_array[num] = "plugins/icons/50d@2x.gif"
-        elif id_array[num] == 800:
-            idImage_array[num] = "plugins/icons/01d@2x.gif"
-        elif id_array[num] == 801:
-            idImage_array[num] = "plugins/icons/02d@2x.gif"
-        elif id_array[num] == 802:
-            idImage_array[num] = "plugins/icons/03d@2x.gif"
-        elif id_array[num] == 803 or id_array[num] == 804:
-            idImage_array[num] = "plugins/icons/04d@2x.gif"
-        else:
-            print("Invalid weather ID")
-
-    for image in idImage_array:
-        wn.addshape(image)
-    '''
 
 touch_fcn = None
 
@@ -304,7 +271,7 @@ def clock_click(x, y):
 
 bg_hours = [None]*12
 for i in range(0, 12):
-    bg_hours[i] = turtle.Turtle(visible=False)
+    bg_hours[i] = turtle.Turtle(visible=True)
     bg_hours[i].penup()
     bg_hours[i].goto(hours[i][0], hours[i][1])
 
@@ -391,6 +358,7 @@ def draw_clock(h, m, s, pen): # draw a clock using the pen i created
 wn.onscreenclick(clock_click)
 
 last_fetch = None
+last_draw = None
 
 while True:
     h = int(time.strftime("%I"))
@@ -409,7 +377,7 @@ while True:
         dateText.write(day, align="center", font=("Verdana", 48, "normal"))
         dateText.fd(18)
         dateText.write(time.strftime("%a").upper(), align="center", font=("Verdana", 18, "bold"))
-    elif day != None and not clock_mode:
+    elif not clock_mode:
         day = None
         dateText.clear()
         
@@ -422,12 +390,13 @@ while True:
             data = fetch_weather_data(url)
             last_fetch = m
 
-    if clock_mode:
+    if clock_mode and s != last_draw:
+        last_draw = s
+        pen.clear()
         draw_clock(h, m, s, pen)
         update_forecast()
 
         for i in range(1, 13):
-            bg_hours[i-1].showturtle()
             if(i-hourCursor < 0):
                 bg_hours[i-1].shape(idImage_array[12-abs(i-hourCursor)])
             else:
@@ -435,4 +404,3 @@ while True:
 
     wn.update()
     time.sleep(0.25)
-    pen.clear()
