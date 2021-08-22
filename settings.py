@@ -6,6 +6,7 @@ OWM_EXCLUDES = "current,minutely,flags"
 
 ICON_SET_NAME = "owm-std"
 UPDATE_PERIOD = 10
+FONT_SIZE = 18
 
 def get_settings():
     with open("settings.json", "r") as settings_file:
@@ -19,3 +20,5 @@ if "icon-set-name" in settings:
 
 if "update-period" in settings:
     UPDATE_PERIOD = settings["update-period"]
+
+WEATHER_DATA_URL = f'{OWM_BASEURI}?lat={settings["latitude"]}&lon={settings["longitude"]}&exclude={OWM_EXCLUDES}&appid={settings["APIKEY"]}&units=metric'

@@ -1,8 +1,9 @@
 from datetime import datetime
-from .utils import round_to_half
+from utils import round_to_half
+import settings
 import turtle
 
-FontSize = 16
+FontSize = settings.FONT_SIZE
 SunFont = ("Verdana", FontSize, "bold")
 
 pen = turtle.Turtle()
