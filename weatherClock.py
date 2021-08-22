@@ -22,6 +22,7 @@ current_day = None
 
 
 def fetch_weather_data():
+    print("Fetching forecast...")
     res = requests.get(settings.WEATHER_DATA_URL)
     weather_data = res.json()
     with open("/tmp/weather.json", "w") as cache:
@@ -71,7 +72,6 @@ wn.tracer(0)
 forecast.initialize(wn)
 
 
-
 touch_fcn = None
 
 def set_click_fcn(function):
@@ -104,8 +104,7 @@ def clock_click(x, y):
         elif special_events.click(cursor_x, cursor_y) != None:
             set_click_fcn(special_events.click)
         elif forecast.click(cursor_x, cursor_y):
-            set_click_fcn(forecast.click_off)
-            forecast.draw_weather_text(data)
+            set_click_fcn(forecast.click)
     else:
         if touch_fcn:
             if touch_fcn(cursor_x, cursor_y) == False:
@@ -199,6 +198,7 @@ while True:
     alerts.update(data)
     sun.update(data)
     special_events.update(data)
+    forecast.update(data)
 
     if (m % settings.UPDATE_PERIOD == 0 and s == 0):
         if m != last_fetch:
@@ -209,8 +209,6 @@ while True:
         last_draw = s
         pen.clear()
         draw_clock(h, m, s, pen)
-        forecast.update(data)
-
 
     wn.update()
     time.sleep(0.25)
