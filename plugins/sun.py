@@ -50,6 +50,7 @@ def update(data):
     if daily[0]["dt"] != today["dt"]:
         today = daily[0]
         tomorrow = daily[1]
+        pen.clear()
         draw_times()
 
 def click(x, y):
