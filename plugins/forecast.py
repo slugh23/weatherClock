@@ -52,7 +52,7 @@ def get_hourly_forecasts(data, idx):
         ("Hour", dt.strftime('%H:%S')),
         ("Temp", f"{round_half_up(fc['temp'], 1)} {degree_sign}"),
         ("Feels like", f"{round_half_up(fc['feels_like'], 1)} {degree_sign}"),
-        ("PoP", f"{fc['pop']*100} %"),
+        ("PoP", f"{round_half_up(fc['pop']*100)} %"),
         ("Rain", f"{round_half_up(fc['rain']['1h'] / 25.4, 2)} in" if "rain" in fc else "--"),
         ("Wind", f"{round_half_up(fc['wind_speed'] * 0.6213712, 1)} mph"),
         ("Gust", f"{round_half_up(fc['wind_gust'] * 0.6213712, 1)} mph"),
