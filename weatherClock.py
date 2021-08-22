@@ -11,18 +11,14 @@ from plugins import alerts, sun, forecast, special_events
 #latitude = 49.2827
 #longtitude = -123.1207
 
-settings = globals.get_settings()
+settings = globals.settings
 
 url = f'{globals.OWM_BASEURI}?lat={settings["latitude"]}&lon={settings["longitude"]}&exclude={globals.OWM_EXCLUDES}&appid={settings["APIKEY"]}&units=metric'
 
-clock_mode = True
 radius = globals.CLOCK_RADIUS
-
+clock_mode = True
 data = None
-weatherUpdatePeriod = 10
-
-#current_hour = 0
-day = None
+current_day = None
 
 def fetch_weather_data(owm_url):
     res = requests.get(owm_url)
@@ -88,9 +84,9 @@ print(dir(forecast))
 forecast.initialize(wn)
 
 def draw_weather_text(hourTouched):
-    global pen, dateText, day
+    global pen, dateText, current_day
     
-    day = None
+    current_day = None
 
     current_hour = int(time.strftime("%H"))
     hoursAhead = hourTouched - current_hour
@@ -182,6 +178,17 @@ def forecast_click(x, y):
 
 touch_fcn = None
 
+def set_click_fcn(function):
+    global touch_fcn, clock_mode, pen, dateText
+    if function is None:
+        clock_mode = True
+    else:
+        pen.clear()
+        dateText.clear()
+        clock_mode = False
+    touch_fcn = function
+
+
 def clock_click(x, y):
     '''
     when this event is triggered, it means someone pressed the screen,
@@ -199,14 +206,11 @@ def clock_click(x, y):
         
     if clock_mode:
         if alerts.click(cursor_x, cursor_y) != None:
-            touch_fcn = alerts.click
-            clock_mode = False
+            set_click_fcn(alerts.click)
         elif special_events.click(cursor_x, cursor_y) != None:
-            touch_fcn = special_events.click
-            clock_mode = False
+            set_click_fcn(special_events.click)
         elif hourTouched:
-            touch_fcn = forecast_click
-            clock_mode = False
+            set_click_fcn(forecast_click)
             draw_weather_text(hourTouched)
     else:
         if touch_fcn:
@@ -284,19 +288,19 @@ while True:
     s = int(time.strftime("%S"))
     d = time.strftime("%d")
     
-    if d != day and clock_mode:
-        day = d
+    if d != current_day and clock_mode:
+        current_day = d
         dateText.clear()
         dateText.color("white")
         dateText.setheading(270)
         dateText.goto(186,28)
         dateText.write(time.strftime("%b").upper(), align="center", font=("Verdana", 18, "bold"))
         dateText.fd(68)
-        dateText.write(day, align="center", font=("Verdana", 48, "normal"))
+        dateText.write(current_day, align="center", font=("Verdana", 48, "normal"))
         dateText.fd(18)
         dateText.write(time.strftime("%a").upper(), align="center", font=("Verdana", 18, "bold"))
     elif not clock_mode:
-        day = None
+        current_day = None
         pen.clear()
         dateText.clear()
         
@@ -304,12 +308,12 @@ while True:
     sun.update(data)
     special_events.update(data)
 
-    if (m % weatherUpdatePeriod == 0 and s == 0):
+    if (m % globals.UPDATE_PERIOD == 0 and s == 0):
         if m != last_fetch:
             data = fetch_weather_data(url)
             last_fetch = m
 
-    if clock_mode and s != last_draw:
+    if clock_mode:
         last_draw = s
         pen.clear()
         draw_clock(h, m, s, pen)
