@@ -1,44 +1,28 @@
-import os
 import time
 import turtle
-import math
-import requests
-from datetime import datetime
-from datetime import timedelta
 import json
-from plugins.utils import round_half_up
+import requests
+import globals
+from datetime import datetime
+from plugins.utils import round_half_up, touch_in_box
 from plugins import alerts, sun, forecast, special_events
 
 # currently set to Vancouver, BC CANADA
 #latitude = 49.2827
 #longtitude = -123.1207
-radius = 270
 
-settings = None
-with open("settings.json", "r") as settings_file:
-    settings = json.loads(settings_file.read())
+settings = globals.get_settings()
 
-url = f'http://api.openweathermap.org/data/2.5/onecall?lat={settings["latitude"]}&lon={settings["longitude"]}&exclude=current,minutely,flags&appid={settings["APIKEY"]}&units=metric'
-
-CLOCK_MODE = 0
-HOURLY_MODE = 1
-ALERT_MODE = 2
+url = f'{globals.OWM_BASEURI}?lat={settings["latitude"]}&lon={settings["longitude"]}&exclude={globals.OWM_EXCLUDES}&appid={settings["APIKEY"]}&units=metric'
 
 clock_mode = True
+radius = globals.CLOCK_RADIUS
 
 data = None
 weatherUpdatePeriod = 10
 
-id_array = [0] * 12
-idImage_array = [""] * 12
-
-currentHour = 0
+#current_hour = 0
 day = None
-
-hourCursor = 0
-
-if "icon-set-name" in settings:
-    forecast.icon_set_name = settings["icon-set-name"]
 
 def fetch_weather_data(owm_url):
     res = requests.get(owm_url)
@@ -88,13 +72,6 @@ degree_sign = u"\N{DEGREE SIGN}"
 dateText = turtle.Turtle(visible=False)
 dateText.penup()
 
-hourlyTouchSize = 180 # determines radius for user touch when going into hourly detail mode
-
-hours = []
-for i in range(60, -300, -30):
-    i_r = math.radians(i)
-    hours.append((math.cos(i_r)*radius, math.sin(i_r)*radius))
-
 wn = pen.getscreen()
 wn.bgcolor("black")
 wn.screensize()
@@ -110,21 +87,13 @@ wn.tracer(0)
 print(dir(forecast))
 forecast.initialize(wn)
 
-def touchInBox(touch_x, touch_y, center_x, center_y, size_x, size_y):
-    if (touch_x > (center_x - size_x/2) and touch_x < (center_x + size_x/2) and touch_y > (center_y - size_y/2) and touch_y < (center_y + size_y/2)):
-        return True
-    else:
-        return False
-
 def draw_weather_text(hourTouched):
     global pen, dateText, day
     
-    pen.clear()
-    dateText.clear()
     day = None
 
-    currentHour = int(time.strftime("%H"))
-    hoursAhead = hourTouched - currentHour
+    current_hour = int(time.strftime("%H"))
+    hoursAhead = hourTouched - current_hour
     if hoursAhead < 0:
         hoursAhead = (hoursAhead + 24) % 12
 
@@ -204,29 +173,12 @@ def draw_weather_text(hourTouched):
     
 def forecast_click(x, y):
     global weatherText, weatherDividerPen
-    if touchInBox(x, y, 0, 0, 200, 200):
+    if touch_in_box(x, y, 0, 0, 200, 200):
         weatherText.clear()
         weatherDividerPen.clear()
         return False
     return None
         
-def update_forecast():
-    '''
-    weather ID breakdown https://openweathermap.org/weather-conditions
-    use https://ezgif.com/maker for gif conversion
-    '''
-    global hourCursor, data, idImage_array
-
-    currentHour = int(time.strftime("%H"))
-    if currentHour > 12:
-        hourCursor = currentHour - 12
-    elif currentHour == 0:
-        hourCursor = 12
-    else:
-        hourCursor = currentHour
-
-    idImage_array = forecast.get_image_array(data["hourly"])
-
 
 touch_fcn = None
 
@@ -236,20 +188,14 @@ def clock_click(x, y):
     therefore we should check what state we are going into (clock mode,
     or hourly detail mode)
     '''
-    global cursor_x, cursor_y, cursor_xform, clock_mode, mode, touch_fcn
+    global cursor_x, cursor_y, cursor_xform, clock_mode, touch_fcn
 
     cursor_x = x * cursor_xform
     cursor_y = y * cursor_xform
 
     print(f"Click! ({cursor_x}, {cursor_y})")
 
-    hourTouched = False
-
-    for i in range(0, 12):
-        if (touchInBox(cursor_x, cursor_y, hours[i][0], hours[i][1], hourlyTouchSize, hourlyTouchSize)):
-            hourTouched = i + 1
-            break
-
+    hourTouched = forecast.click(cursor_x, cursor_y)
         
     if clock_mode:
         if alerts.click(cursor_x, cursor_y) != None:
@@ -269,36 +215,8 @@ def clock_click(x, y):
                 clock_mode = True
 
 
-bg_hours = [None]*12
-for i in range(0, 12):
-    bg_hours[i] = turtle.Turtle(visible=True)
-    bg_hours[i].penup()
-    bg_hours[i].goto(hours[i][0], hours[i][1])
-
-
 def draw_clock(h, m, s, pen): # draw a clock using the pen i created
-    global dateText
-    # Draw the clock face
-    #pen.up()
-    # pen.goto(0, 210)
-    # pen.setheading(180)
-    # pen.color("green")
-    # pen.pendown()
-    # pen.circle(210)
-
-    # Draw lines for the hours
-    # pen.penup()
-    # pen.goto(0,0)
-    # pen.setheading(90)
-
-    # for _ in range(12):
-    #     pen.fd(190)
-    #     pen.pendown()
-    #     pen.fd(20)
-    #     pen.penup()
-    #     pen.goto(0,0)
-    #     pen.rt(30)
-
+    global radius
     pen.hideturtle()
 
     # Draw the hour hand
@@ -379,6 +297,7 @@ while True:
         dateText.write(time.strftime("%a").upper(), align="center", font=("Verdana", 18, "bold"))
     elif not clock_mode:
         day = None
+        pen.clear()
         dateText.clear()
         
     alerts.update(data)
@@ -394,13 +313,8 @@ while True:
         last_draw = s
         pen.clear()
         draw_clock(h, m, s, pen)
-        update_forecast()
+        forecast.update(data)
 
-        for i in range(1, 13):
-            if(i-hourCursor < 0):
-                bg_hours[i-1].shape(idImage_array[12-abs(i-hourCursor)])
-            else:
-                bg_hours[i-1].shape(idImage_array[i-hourCursor])
 
     wn.update()
     time.sleep(0.25)
