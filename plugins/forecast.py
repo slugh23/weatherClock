@@ -50,13 +50,15 @@ def get_hourly_forecasts(data, idx):
     return [
         ("Day", dt.strftime('%A')),
         ("Hour", dt.strftime('%H:%S')),
-        ("Temp", f"{round_half_up(fc['temp'], 1)} {degree_sign}"),
-        ("Feels like", f"{round_half_up(fc['feels_like'], 1)} {degree_sign}"),
+        ("Weather", f"{fc['weather'][0]['description']}"),
+        ("Temperature", f"{round_half_up(fc['temp'], 1)} {degree_sign}C"),
+        ("Feels like", f"{round_half_up(fc['feels_like'], 1)} {degree_sign}C"),
+        ("Humidity", f"{fc['humidity']} %"),
         ("PoP", f"{round_half_up(fc['pop']*100)} %"),
         ("Rain", f"{round_half_up(fc['rain']['1h'] / 25.4, 2)} in" if "rain" in fc else "--"),
         ("Wind", f"{round_half_up(fc['wind_speed'] * 0.6213712, 1)} mph"),
         ("Gust", f"{round_half_up(fc['wind_gust'] * 0.6213712, 1)} mph"),
-        ("code", f"{fc['weather'][0]['id']}")
+        #("code", f"{fc['weather'][0]['id']}")
     ]
 
 def draw_weather_text(data):
@@ -169,13 +171,13 @@ txt = turtle.Turtle(visible=False)
 txt.penup()
 txt.color("white")
 txt.setheading(270)
-txt_x = -30
+txt_x = -20
 
 val = turtle.Turtle(visible=False)
 val.penup()
 val.color("white")
 val.setheading(270)
-val_x = 30
+val_x = 20
 
 FONT_SIZE = 18
 SPACING = 30
