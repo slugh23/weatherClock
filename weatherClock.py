@@ -11,8 +11,6 @@ from plugins import alerts, sun, forecast, special_events
 #latitude = 49.2827
 #longtitude = -123.1207
 
-print(globals())
-
 cfg = settings.settings
 
 radius = settings.CLOCK_RADIUS
@@ -20,35 +18,21 @@ clock_mode = True
 data = None
 current_day = None
 
-
-def fetch_weather_data():
-    print("Fetching forecast...")
-    res = requests.get(settings.WEATHER_DATA_URL)
-    weather_data = res.json()
-    with open("/tmp/weather.json", "w") as cache:
-        cache.write(json.dumps(weather_data))
-    return weather_data
-
-try:
-    with open("/tmp/weather.json", "r") as cache:
-        data = json.loads(cache.read())
-        if data["hourly"][1]["dt"] < time.time():
-            print("Old data --  Refreshing cache!")
-            data = fetch_weather_data()
-except:
-    data = fetch_weather_data()
-    
-if data == None:
-    data = fetch_weather_data()
-
-#if "alerts" not in data:
-#    data["alerts"] = [{"sender_name": "NWS Buffalo (Western New York)", "event": "Heat Advisory", "start": 1628668260, "end": 1628726400, "description": "...HEAT ADVISORY REMAINS IN EFFECT UNTIL 8 PM EDT THIS EVENING...\n* WHAT...Heat index values this afternoon from the upper 90s to\n105.\n* WHERE...Niagara, Orleans, Monroe, Wayne, and Livingston\ncounties.\n* WHEN...Until 8 PM EDT this evening.\n* IMPACTS...Hot temperatures and high humidity may cause heat\nillnesses to occur.", "tags": ["Extreme temperature value"]}]
-
-cursor_x = 0
-cursor_y = 0
 cursor_xform = 1
 if "invert-cursor" in cfg:
     cursor_xform = -1 if cfg["invert-cursor"] else 1
+
+
+def fetch_weather_data():
+    print("Fetching forecast...")
+    try:
+        res = requests.get(settings.WEATHER_DATA_URL)
+        weather_data = res.json()
+        with open("/tmp/weather.json", "w") as cache:
+            cache.write(json.dumps(weather_data))
+        return weather_data
+    except:
+        return None
 
 pen = turtle.Turtle(visible=False)
 pen.speed(0)
@@ -60,6 +44,10 @@ dateText.penup()
 wn = pen.getscreen()
 wn.bgcolor("black")
 wn.screensize()
+wn.addshape("clock.gif")
+ps = pen.shape()
+pen.shape("clock.gif")
+pen.stamp()
 
 if "screen" in cfg:
     wn.setup(width=cfg["screen"]["width"], height=cfg["screen"]["height"])
@@ -71,6 +59,29 @@ wn.tracer(0)
 
 forecast.initialize(wn)
 
+try:
+    with open("/tmp/weather.json", "r") as cache:
+        data = json.loads(cache.read())
+        if data["hourly"][1]["dt"] < time.time():
+            print("Old data --  Refreshing cache!")
+            data = fetch_weather_data()
+except:
+    data = fetch_weather_data()
+
+sleep = 5
+while data is None:
+    if sleep > 1400:
+        quit()
+    time.sleep(sleep)
+    sleep = (sleep + 1) * 1.3
+    data = fetch_weather_data()
+
+#if "alerts" not in data:
+#    data["alerts"] = [{"sender_name": "NWS Buffalo (Western New York)", "event": "Heat Advisory", "start": 1628668260, "end": 1628726400, "description": "...HEAT ADVISORY REMAINS IN EFFECT UNTIL 8 PM EDT THIS EVENING...\n* WHAT...Heat index values this afternoon from the upper 90s to\n105.\n* WHERE...Niagara, Orleans, Monroe, Wayne, and Livingston\ncounties.\n* WHEN...Until 8 PM EDT this evening.\n* IMPACTS...Hot temperatures and high humidity may cause heat\nillnesses to occur.", "tags": ["Extreme temperature value"]}]
+
+pen.clearstamps()
+pen.shape(ps)
+wn.addshape("error.gif")
 
 touch_fcn = None
 
@@ -91,7 +102,7 @@ def clock_click(x, y):
     therefore we should check what state we are going into (clock mode,
     or hourly detail mode)
     '''
-    global cursor_x, cursor_y, cursor_xform, clock_mode, touch_fcn
+    global cursor_xform, clock_mode, touch_fcn
 
     cursor_x = x * cursor_xform
     cursor_y = y * cursor_xform
@@ -175,6 +186,12 @@ wn.onscreenclick(clock_click)
 last_fetch = None
 last_draw = None
 
+error = turtle.Turtle(visible=False)
+error.penup()
+error.shape("error.gif")
+error.goto(-360 + 24, 360 - 24)#220)
+error.stamp()
+
 while True:
     h = int(time.strftime("%I"))
     m = int(time.strftime("%M"))
@@ -200,10 +217,16 @@ while True:
     special_events.update(data)
     forecast.update(data)
 
-    if (m % settings.UPDATE_PERIOD == 0 and s == 0):
+    if m % settings.UPDATE_PERIOD == 0 and s == 0:
         if m != last_fetch:
-            data = fetch_weather_data()
-            last_fetch = m
+            fetch = fetch_weather_data()
+            if fetch is not None:
+                error.clearstamps()
+                last_fetch = m
+                data = fetch
+            else:
+                error.stamp()
+
 
     if clock_mode:
         last_draw = s
