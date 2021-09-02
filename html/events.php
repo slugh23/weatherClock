@@ -9,7 +9,7 @@ if ($json && strlen($json) > 0)
     echo "dec/en-coded data\n";
     if ($encoded && strlen($encoded) > 0) {
         echo "saving data\n";
-        $saved = file_put_contents("special-events.json");
+        $saved = file_put_contents("../special-events.json", $encoded);
         var_dump($saved);
         if ($saved !== FALSE && $saved > 0) {
             echo "saved data $saved\n";
@@ -18,6 +18,6 @@ if ($json && strlen($json) > 0)
     exit();
 }
 
-echo file_get_contents("special-events.json");
+echo file_get_contents("../special-events.json");
 echo "\n";
 

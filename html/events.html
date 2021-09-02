@@ -1,0 +1,132 @@
+<html>
+    <head>
+        <link href="https://unpkg.com/tabulator-tables@4.9.3/dist/css/tabulator.min.css" rel="stylesheet">
+        <script type="text/javascript" src="https://unpkg.com/tabulator-tables@4.9.3/dist/js/tabulator.min.js"></script>
+    </head>
+    <body>
+        <div>
+            <button id="add-row">Add new event</button>
+            <button id="show-data">Show JSON</button>
+            <!--
+            <button id="clear">Empty the table</button>
+            <button id="reset">Reset</button>
+            -->
+        </div>
+        <div id="example-table"></div>
+        <div>
+            <button id="save-all">Save Events</button>
+        </div>
+        <div id="data"></div>
+        <script>
+            var month = function(cell, value, parameters){
+                //cell - the cell component for the edited cell
+                //value - the new input value of the cell
+                //parameters - the parameters passed in with the validator
+
+                return value == "" || (1 <= value && value <= 31);
+            }
+
+            var arrayEditor = function(cell, onRendered, success, cancel){
+                //cell - the cell component for the editable cell
+                //onRendered - function to call when the editor has been rendered
+                //success - function to call to pass the successfuly updated value to Tabulator
+                //cancel - function to call to abort the edit and return to a normal cell
+
+                //create and style input
+                var input = document.createElement("input");
+                var cValue = cell.getValue();
+
+                input.style.padding = "4px";
+                input.style.width = "100%";
+                input.style.boxSizing = "border-box";
+                if (Array.isArray(cValue)) {
+                    input.value = cValue.join(',');
+                }
+                else {
+                    input.value = typeof cValue === 'undefined' ? "" : cValue;
+                }
+
+                onRendered(function(){
+                    input.focus();
+                    input.style.height = "100%";
+                });
+
+                function onChange(){
+                    var iv = input.value == "" ? undefined : input.value;
+                    if(iv != cValue) {
+                        var a = input.value.split(',').map((e)=>{return parseInt(e)});
+                        success(a.length > 1 ? a : a[0]);
+                    }else{
+                        cancel();
+                    }
+                }
+            
+                //submit new value on blur or change
+                input.addEventListener("blur", onChange);
+
+                //submit new value on enter
+                input.addEventListener("keydown", function(e){
+                    if(e.keyCode == 13){
+                        onChange();
+                    }
+
+                    if(e.keyCode == 27){
+                        cancel();
+                    }
+                });
+
+                return input;
+            };
+
+            var nullMutator = function(value, data, type, params, component){
+                return value == "" ? undefined : value;
+            }
+
+            var table = new Tabulator("#example-table", {
+                //height:"311px",
+                layout:"fitDataStretch",
+                columns:[
+                    {title:"Priority", field:"priority", sorter:"number", editor:true},
+                    {title:"Type", field:"icon", sorter:"number", hozAlign:"left",
+                        editor:"select", editorParams:{values:{"pin":"Important", "birthday":"Birthday", "holiday":"Holiday", "info":"Information"}}},
+                    // Look at mutators for month...
+                    {title:"Month", field:"trigger.month", editor:"input", mutatorEdit:nullMutator, validator:[{"type": month}]},
+                    {title:"Day", field:"trigger.day", editor:arrayEditor},
+                    {title:"DoW", field:"trigger.dow", sorter:"number",  hozAlign:"left", mutatorEdit:nullMutator,
+                        editor:"select", editorParams:{values:{"": "None", "0":"Sunday", "1":"Monday", "2":"Tuesday", "3":"Wednesday", "4":"Thursday", "5":"Friday", "6":"Saturday"}}},
+                    {title:"Image", field:"image", sorter:"number", hozAlign:"left", editor:"input", mutatorEdit:nullMutator},
+                    {title:"Name", field:"description", editor:"input"},
+/*
+                    {title:"Gender", field:"gender"},
+                    {title:"Rating", field:"rating",  formatter:"star", hozAlign:"center", width:100, editor:true},
+                    {title:"Date Of Birth", field:"dob", hozAlign:"center", sorter:"date", width:140},
+                    {title:"Driver", field:"car", hozAlign:"center", editor:true, formatter:"tickCross"},
+*/
+                ],
+            });
+            table.setData("events.php");
+
+            //Add row on "Add Row" button click
+            document.getElementById("add-row").addEventListener("click", () => {
+                table.addRow({});
+            });
+
+            document.getElementById("show-data").addEventListener("click", () => {
+                d = document.getElementById("data");
+                d.innerHTML = JSON.stringify(table.getData());
+            });
+
+            document.getElementById("save-all").addEventListener("click", () => {
+                fetch('events.php', {
+                    method: 'post',
+                    headers: {
+                        'Accept': 'application/json, text/plain, */*',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(table.getData())
+                });
+            });
+        </script>
+    </body>
+</html>
+
