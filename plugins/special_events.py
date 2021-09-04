@@ -52,7 +52,7 @@ def expand_events(evts):
     return expanded
 
 def test_event(month, day, dow, trigger):
-    if "disable" in trigger and trigger["disable"]:
+    if "disabled" in trigger and trigger["disabled"]:
         return False
     if "month" in trigger and trigger["month"] != month:
         return False
