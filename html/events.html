@@ -78,16 +78,37 @@
                 return input;
             };
 
-            var nullMutator = function(value, data, type, params, component){
+            var nullMutator = function(value, data, type, params, component) {
                 return value == "" ? undefined : value;
             }
+
+            var rowMenu = [
+                {
+                    label: "Delete event",
+                    action: (e, row) => {
+                        row.delete();
+                    }
+                }
+            ];
 
             var table = new Tabulator("#example-table", {
                 //height:"311px",
                 layout:"fitDataStretch",
+                //selectable:true,
+                rowContextMenu: rowMenu,
                 columns:[
+                    {title:"D*", field:"trigger.disabled", formatter:"tickCross", sorter:"boolean", editor:true, hozAlign:"center",
+                    mutatorEdit:(value, data, type, params, component) => {
+                        return value === true ? true : undefined;
+                    },
+                    formatterParams:{
+                        allowEmpty:true,
+                        allowTruthy:true,
+                        tickElement:"<strong>[X]</strong>",
+                        crossElement:false,
+                    }, cellClick:(e, cell)=>{}},
                     {title:"Priority", field:"priority", sorter:"number", editor:true},
-                    {title:"Type", field:"icon", sorter:"number", hozAlign:"left",
+                    {title:"Type", field:"icon", sorter:"string", hozAlign:"left",
                         editor:"select", editorParams:{values:{"pin":"Important", "birthday":"Birthday", "holiday":"Holiday", "info":"Information"}}},
                     // Look at mutators for month...
                     {title:"Month", field:"trigger.month", editor:"input", mutatorEdit:nullMutator, validator:[{"type": month}]},
@@ -103,6 +124,10 @@
                     {title:"Driver", field:"car", hozAlign:"center", editor:true, formatter:"tickCross"},
 */
                 ],
+                initialSort: [
+                    {column:"icon", dir:"asc"},
+                    {column:"priority", dir:"asc"},
+                ]
             });
             table.setData("events.php");
 
@@ -124,6 +149,9 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(table.getData())
+                })
+                .then(() => {
+                    table.setData("events.php");
                 });
             });
         </script>
