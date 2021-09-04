@@ -3,8 +3,11 @@ from utils import round_to_half
 import settings
 import turtle
 
-FontSize = settings.FONT_SIZE
-SunFont = ("Verdana", FontSize, "bold")
+FontSize = 24
+SunFont = ("Inconsolata", FontSize, "bold")
+top_x = 270
+top_y = -260
+spacing = 35
 
 pen = turtle.Turtle()
 pen.hideturtle()
@@ -23,23 +26,23 @@ def to_string(dt):
 
 def draw_times():
     global today, tomorrow
-    pen.goto(-270, -270)
+    pen.goto(-1 * top_x, top_y)
     pen.color("cyan")
     pen.write(str(round_to_half(today["temp"]["morn"])) + degree_sign, align="center", font=SunFont)
-    pen.fd(30)
+    pen.fd(spacing)
     pen.color("yellow")
     pen.write(to_string(today["sunrise"]), align="center", font=SunFont)
-    pen.fd(30)
+    pen.fd(spacing)
     pen.color("orange")
     pen.write(to_string(today["sunset"]), align="center", font=SunFont)
     
-    pen.goto(270, -270)
+    pen.goto(top_x, top_y)
     pen.color("cyan")
     pen.write(str(round_to_half(tomorrow["temp"]["morn"])) + degree_sign, align="center", font=SunFont)
-    pen.fd(30)
+    pen.fd(spacing)
     pen.color("yellow")
     pen.write(to_string(tomorrow["sunrise"]), align="center", font=SunFont)
-    pen.fd(30)
+    pen.fd(spacing)
     pen.color("orange")
     pen.write(to_string(tomorrow["sunset"]), align="center", font=SunFont)
 
