@@ -56,8 +56,8 @@ def get_hourly_forecasts(data, idx):
         ("Humidity", f"{fc['humidity']} %"),
         ("PoP", f"{round_half_up(fc['pop']*100)} %"),
         ("Rain", f"{round_half_up(fc['rain']['1h'] / 25.4, 2)} in" if "rain" in fc else "--"),
-        ("Wind", f"{round_half_up(fc['wind_speed'] * 0.6213712, 1)} mph"),
-        ("Gust", f"{round_half_up(fc['wind_gust'] * 0.6213712, 1)} mph"),
+        ("Wind", f"{round_half_up(fc['wind_speed'] * 3.6 * 0.6213712, 1)} mph"),
+        ("Gust", f"{round_half_up(fc['wind_gust'] * 3.6 * 0.6213712, 1)} mph"),
         #("code", f"{fc['weather'][0]['id']}")
     ]
 
