@@ -82,6 +82,10 @@
                 return value == "" ? undefined : value;
             }
 
+            var nullMutatorInt = function(value, data, type, params, component) {
+                return value == "" ? undefined : parseInt(value);
+            }
+
             var rowMenu = [
                 {
                     label: "Delete event",
@@ -111,9 +115,9 @@
                     {title:"Type", field:"icon", sorter:"string", hozAlign:"left",
                         editor:"select", editorParams:{values:{"pin":"Important", "birthday":"Birthday", "holiday":"Holiday", "info":"Information"}}},
                     // Look at mutators for month...
-                    {title:"Month", field:"trigger.month", editor:"input", mutatorEdit:nullMutator, validator:[{"type": month}]},
+                    {title:"Month", field:"trigger.month", editor:"input", mutatorEdit:nullMutatorInt, validator:[{"type": month}]},
                     {title:"Day", field:"trigger.day", editor:arrayEditor},
-                    {title:"DoW", field:"trigger.dow", sorter:"number",  hozAlign:"left", mutatorEdit:nullMutator,
+                    {title:"DoW", field:"trigger.dow", sorter:"number",  hozAlign:"left", mutatorEdit:nullMutatorInt,
                         editor:"select", editorParams:{values:{"": "None", "0":"Sunday", "1":"Monday", "2":"Tuesday", "3":"Wednesday", "4":"Thursday", "5":"Friday", "6":"Saturday"}}},
                     {title:"Image", field:"image", sorter:"number", hozAlign:"left", editor:"input", mutatorEdit:nullMutator},
                     {title:"Name", field:"description", editor:"input"},
@@ -133,7 +137,7 @@
 
             //Add row on "Add Row" button click
             document.getElementById("add-row").addEventListener("click", () => {
-                table.addRow({});
+                table.addRow({priority: 999, icon: "pin", trigger: {disabled: true}, description:"New event - don't forget to enable" });
             });
 
             document.getElementById("show-data").addEventListener("click", () => {

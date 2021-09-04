@@ -1,6 +1,7 @@
 import json
 import time
 from datetime import datetime
+import os.path
 import turtle
 
 FONT_SIZE = 18
@@ -68,8 +69,10 @@ def get_pen_shape(events):
         shape = get_fqip(events[0]["image"])
     else:
         shape = get_fqip(events[0]["icon"])
+
     if shape not in wn.getshapes():
         wn.addshape(shape)
+
     return shape
 
 def sort_events(events):
@@ -77,10 +80,20 @@ def sort_events(events):
         return sorted(events, key=lambda evt: evt["priority"])
     return events
 
+def fetch_current_events():
+    global last_mod, events
+    mod_time = os.path.getmtime("special-events.json")
+    if mod_time > last_mod:
+        events = None
+        last_mod = mod_time
+        with open("special-events.json", "r") as events_file:
+            events = json.loads(events_file.read())
+    return events
+
 def get_events(month, day, dow):
-    global events
+    all_events = fetch_current_events()
     today_events = []
-    for e in events:
+    for e in all_events:
         if test_event(month, day, dow, e["trigger"]):
             today_events.append(e)
     return sort_events(today_events)
@@ -147,14 +160,14 @@ def close_event():
 
 def update(data):
     global active, alertable, evt
-    events = get_events_today()
-    if len(events):
+    today = get_events_today()
+    if len(today):
         if not alertable:
-            evt.shape(get_pen_shape(events))
+            evt.shape(get_pen_shape(today))
             evt.stamp()
             alertable = True
         if active:
-            display_events(events)
+            display_events(today)
         else:
             close_event()
     else:
@@ -191,15 +204,15 @@ alertable = False
 active = False
 on_screen = False
 
+last_mod = 0
 events = None
-with open("special-events.json", "r") as events_file:
-    events = json.loads(events_file.read())
 
 wn = evt.getscreen()
-for e in events:
-    icon = get_fqip(f"{e['icon']}-24")
-    if icon not in wn.getshapes():
-        wn.addshape(icon)
+for e in fetch_current_events():
+    if 'icon' in e:
+        icon = get_fqip(f"{e['icon']}-24")
+        if icon not in wn.getshapes():
+            wn.addshape(icon)
 
 #all = expand_events(events)
 #print(all)
