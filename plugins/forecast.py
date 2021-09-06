@@ -99,7 +99,7 @@ def update(data):
     weather ID breakdown https://openweathermap.org/weather-conditions
     use https://ezgif.com/maker for gif conversion
     '''
-    global bg_hours, active
+    global bg_hours, active, last_on
 
     currentHour = int(time.strftime("%H"))
     if currentHour > 12:
@@ -111,14 +111,19 @@ def update(data):
 
     idImage_array = get_image_array(data["hourly"])
 
-    if active:
-        draw_weather_text(data)
-
     for i in range(1, 13):
         if(i-hourCursor < 0):
             bg_hours[i-1].shape(idImage_array[12-abs(i-hourCursor)])
         else:
             bg_hours[i-1].shape(idImage_array[i-hourCursor])
+
+    if active:
+        if time.time() - last_on < TIMEOUT:
+            draw_weather_text(data)
+        else:
+            close_forecast()
+            active = False
+            return False
 
 def close_forecast():
     global txt, val, pen, on_screen
@@ -135,7 +140,7 @@ def click(x, y):
         return click_off(x, y)
 
 def click_on(x, y):
-    global hours, hour_touched, active
+    global hours, hour_touched, active, last_on
     hour_touched = False
     
     for i in range(0, 12):
@@ -144,6 +149,7 @@ def click_on(x, y):
             close_forecast()
             active = True
             break
+    last_on = time.time()
     return hour_touched
 
 def click_off(x, y):
@@ -158,13 +164,19 @@ def click_off(x, y):
 
 icon_set_name = settings.ICON_SET_NAME
 hour_touched = None
-hourlyTouchSize = 180
+hourlyTouchSize = 140
 active = False
 on_screen = False
+last_on = 0
 
 codes = {}
 hours = []
 bg_hours = [None]*12
+
+FONT_SIZE = 18
+SPACING = 30
+HCHAR = 24
+TIMEOUT = 90
 
 # create our drawing pens
 txt = turtle.Turtle(visible=False)
@@ -178,10 +190,6 @@ val.penup()
 val.color("white")
 val.setheading(270)
 val_x = 20
-
-FONT_SIZE = 18
-SPACING = 30
-HCHAR = 24
 
 pen = turtle.Turtle(visible=False)
 pen.pensize(3)

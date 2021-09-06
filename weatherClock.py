@@ -7,6 +7,8 @@ from datetime import datetime
 from utils import touch_in_box
 from plugins import alerts, sun, forecast, special_events
 
+#https://www.weatherbit.io/api/codes
+
 # currently set to Vancouver, BC CANADA
 #latitude = 49.2827
 #longtitude = -123.1207
@@ -119,8 +121,7 @@ def clock_click(x, y):
     else:
         if touch_fcn:
             if touch_fcn(cursor_x, cursor_y) == False:
-                touch_fcn = None
-                clock_mode = True
+                set_click_fcn(None)
 
 
 def draw_clock(h, m, s, pen): # draw a clock using the pen i created
@@ -211,11 +212,16 @@ while True:
         dateText.write(time.strftime("%a").upper(), align="center", font=("Verdana", 18, "bold"))
     elif not clock_mode:
         current_day = None
-        
-    alerts.update(data)
-    sun.update(data)
-    special_events.update(data)
-    forecast.update(data)
+
+    updates = [
+        alerts.update(data),
+        sun.update(data),
+        special_events.update(data),
+        forecast.update(data),
+    ]
+
+    if False in updates:
+        set_click_fcn(None)
 
     if m % settings.UPDATE_PERIOD == 0 and s == 0:
         if m != last_fetch:
