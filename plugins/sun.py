@@ -4,7 +4,7 @@ import settings
 import turtle
 
 FontSize = 24
-SunFont = ("Inconsolata", FontSize, "bold")
+SunFont = ("Arial", FontSize, "bold")
 top_x = 270
 top_y = -260
 spacing = 35
