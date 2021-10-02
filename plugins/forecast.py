@@ -42,19 +42,20 @@ def get_image_array(hourly):
     return images
 
 def get_hourly_forecasts(data, idx):
-    fc = data["hourly"][idx]
+    fc = data["hourly"][idx] if idx < 48 else data["current"]
     dt = datetime.fromtimestamp(fc["dt"])
 
     degree_sign = u"\N{DEGREE SIGN}"
 
     return [
         ("Day", dt.strftime('%A')),
-        ("Hour", dt.strftime('%H:%S')),
+        ("Hour", dt.strftime('%H:%M')),
         ("Weather", f"{fc['weather'][0]['description']}"),
         ("Temperature", f"{round_half_up(fc['temp'], 1)} {degree_sign}C"),
         ("Feels like", f"{round_half_up(fc['feels_like'], 1)} {degree_sign}C"),
         ("Humidity", f"{fc['humidity']} %"),
-        ("PoP", f"{round_half_up(fc['pop']*100)} %"),
+        ("Pressure", f"{fc['pressure']} hPa"),
+        ("PoP", f"{round_half_up(fc['pop']*100)} %" if 'pop' in fc else "--"),
         ("Rain", f"{round_half_up(fc['rain']['1h'] / 25.4, 2)} in" if "rain" in fc else "--"),
         ("Wind", f"{round_half_up(fc['wind_speed'] * 3.6 * 0.6213712, 1)} mph"),
         ("Gust", f"{round_half_up(fc['wind_gust'] * 3.6 * 0.6213712, 1)} mph"),
@@ -73,13 +74,14 @@ def draw_weather_text(data):
     if hours_ahead < 0:
         hours_ahead = (hours_ahead + 24) % 12
 
-    hf = get_hourly_forecasts(data, hours_ahead)
+    fc = get_hourly_forecasts(data, hours_ahead)
+    txt.color('pink' if hours_ahead > 48 else 'white')
 
-    height = SPACING * (len(hf) - 1)
+    height = SPACING * (len(fc) - 1)
     txt.goto(txt_x, height/2 - HCHAR/2)
     val.goto(val_x, height/2 - HCHAR/2)
 
-    for line in hf:
+    for line in fc:
         txt.write(line[0], align="right", font=("Verdana", FONT_SIZE, "bold"))
         txt.fd(SPACING)
         val.write(line[1], align="left", font=("Verdana", FONT_SIZE, "bold"))
@@ -143,12 +145,15 @@ def click_on(x, y):
     global hours, hour_touched, active, last_on
     hour_touched = False
     
-    for i in range(0, 12):
-        if (touch_in_box(x, y, hours[i][0], hours[i][1], hourlyTouchSize, hourlyTouchSize)):
-            hour_touched = i + 1
-            close_forecast()
-            active = True
-            break
+    if touch_in_box(x, y, 0, 0, hourlyTouchSize, hourlyTouchSize):
+        hour_touched = 1000
+    else:
+        for i in range(0, 12):
+            if touch_in_box(x, y, hours[i][0], hours[i][1], hourlyTouchSize, hourlyTouchSize):
+                hour_touched = i + 1
+                break
+    close_forecast()
+    active = True
     last_on = time.time()
     return hour_touched
 

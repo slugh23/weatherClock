@@ -176,7 +176,7 @@ def draw_clock(h, m, s, pen): # draw a clock using the pen i created
     pen.circle(10)
     pen.end_fill()
     
-    wn.update()
+    #wn.update()
     
     # Draw circle
     '''
