@@ -26,6 +26,8 @@ if "invert-cursor" in cfg:
 
 
 def fetch_weather_data():
+    global error
+    error.clearstamps()
     print("Fetching forecast...")
     try:
         res = requests.get(settings.WEATHER_DATA_URL)
@@ -34,6 +36,7 @@ def fetch_weather_data():
             cache.write(json.dumps(weather_data))
         return weather_data
     except:
+        error.stamp()
         return None
 
 pen = turtle.Turtle(visible=False)
@@ -50,6 +53,12 @@ wn.addshape("clock.gif")
 ps = pen.shape()
 pen.shape("clock.gif")
 pen.stamp()
+
+wn.addshape("error.gif")
+error = turtle.Turtle(visible=False)
+error.penup()
+error.shape("error.gif")
+error.goto(-360 + 24, 360 - 24)#220)
 
 if "screen" in cfg:
     wn.setup(width=cfg["screen"]["width"], height=cfg["screen"]["height"])
@@ -83,7 +92,6 @@ while data is None:
 
 pen.clearstamps()
 pen.shape(ps)
-wn.addshape("error.gif")
 
 touch_fcn = None
 
@@ -187,12 +195,6 @@ wn.onscreenclick(clock_click)
 last_fetch = None
 last_draw = None
 
-error = turtle.Turtle(visible=False)
-error.penup()
-error.shape("error.gif")
-error.goto(-360 + 24, 360 - 24)#220)
-error.stamp()
-
 while True:
     h = int(time.strftime("%I"))
     m = int(time.strftime("%M"))
@@ -227,12 +229,8 @@ while True:
         if m != last_fetch:
             fetch = fetch_weather_data()
             if fetch is not None:
-                error.clearstamps()
                 last_fetch = m
                 data = fetch
-            else:
-                error.stamp()
-
 
     if clock_mode:
         last_draw = s
