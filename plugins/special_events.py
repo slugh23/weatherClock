@@ -8,7 +8,8 @@ FONT_SIZE = 18
 PADDING = 5
 HCHAR = 24
 WCHAR = 12
-WICON = 24
+HICON = 64
+WICON = 64
 
 def get_fqip(name):
     return f"plugins/icons/events/{name}.gif"
@@ -63,17 +64,22 @@ def test_event(month, day, dow, trigger):
     return True
 
 def get_pen_shape(events):
-    global evt
+    global evt, cleared
     wn = evt.getscreen()
-    if "image" in events[0]:
-        shape = get_fqip(events[0]["image"])
-    else:
-        shape = get_fqip(events[0]["icon"])
+    shape = None
+    if len(events) > len(cleared):
+        for e in events:
+            if e["description"] not in cleared:
+                if "image" in e:
+                    shape = get_fqip(e["image"])
+                else:
+                    shape = get_fqip(e["icon"])
+                break
 
-    if shape not in wn.getshapes():
+    if shape and shape not in wn.getshapes():
         wn.addshape(shape)
 
-    return shape
+    return shape if shape else get_fqip("check-round")
 
 def sort_events(events):
     if len(events):
@@ -91,6 +97,7 @@ def fetch_current_events():
     return events
 
 def get_events(month, day, dow):
+    global cleared
     all_events = fetch_current_events()
     today_events = []
     for e in all_events:
@@ -103,30 +110,53 @@ def get_events_today():
     day = int(time.strftime("%d"))
     dow = int(time.strftime("%w"))
     return get_events(month, day, dow)
-
+'''
+def toggle_event(evt):
+    desc = evt["description"]
+    if desc in cleared:
+        cleared.remove(desc)
+    else:
+        cleared.append(desc)
+'''
 def get_dims(message):
-    height = len(message) * HCHAR
+    line_height = len(message) * HCHAR
+    height = line_height if line_height > HICON else HICON 
     width = max([len(line) for line in message]) * WCHAR + WICON
-    return (width, height)
+    return (width, height + 2 * PADDING, line_height)
+
+def get_regions(events):
+    regions = []
+    maxw = 0
+    totalh = 0
+    for e in events:
+        desc = e["description"].split('\n')
+        (width, height, lh) = get_dims(desc)
+        #print(f"events: {width}, {height}, {lh}")
+        regions.append({
+            "width": width,
+            "height": height,
+            "text_base": (height + lh) / 2,
+            "text": e["description"],
+            "icon": e["icon"]
+        })
+        maxw = width if width > maxw else maxw
+        totalh = totalh + height
+    boxw = maxw + 3 * PADDING
+    boxh = totalh
+    return (regions, boxw, boxh)
 
 def display_events(events):
-    global on_screen, MsgFont, txt
-    lines = []
-    for e in events:
-        lines.extend(e["description"].split('\n'))
-    (width, height) = get_dims(lines)
-    boxw = width + 2 * PADDING
-    boxh = height + 2 * PADDING
+    global on_screen, MsgFont, txt, cleared
+    (regions, boxw, boxh) = get_regions(events)
     
     if not on_screen:
         txt.penup()
-        txt.goto(-1 * (width / 2 + PADDING) , height / 2 + PADDING)
-        txt.setheading(90)
+        txt.goto(-boxw / 2, boxh / 2)
+        txt.setheading(0)
         txt.pendown()
         txt.fillcolor("white")
         txt.pencolor("green")
         txt.begin_fill()
-        txt.rt(90)
         txt.fd(boxw)
         txt.rt(90)
         txt.fd(boxh)
@@ -136,18 +166,37 @@ def display_events(events):
         txt.fd(boxh)
         txt.end_fill()
         txt.penup()
-        txt.goto(width / -2 + WICON, height / 2 - HCHAR)
+        txt.goto(-boxw / 2, boxh / 2)
+        first = True
+        for reg in regions:
+            if not first:
+                txt.setheading(0)
+                txt.pendown()
+                txt.fd(boxw)
+                txt.penup()
+                txt.bk(boxw)
+            txt.setheading(270)
+            txt.fd(reg["height"])
+            first = False
+        txt.penup()
         txt.setheading(270)
         txt.color("black")
-        for line in lines:
-            txt.write(line, align="left", font=MsgFont)
-            txt.getscreen().update()
-            txt.fd(HCHAR)
-        txt.goto(width / -2 + WICON / 2, height / 2 - HCHAR / 2 + 1)
-        for e in events:
-            txt.shape(get_fqip(f"{e['icon']}-24"))
+        txt.goto(-boxw / 2 + WICON + 2 * PADDING, boxh / 2)
+        for reg in regions:
+            pos = txt.pos()
+            txt.fd(reg["text_base"])
+            txt.write(reg["text"], align="left", font=MsgFont)
+            txt.goto(pos)
+            txt.fd(reg["height"])
+        txt.goto(-boxw / 2 + WICON / 2 + PADDING, boxh / 2)
+        for reg in regions:
+            txt.fd(reg["height"] / 2)
+            if reg["text"] not in cleared:
+                txt.shape(get_fqip(f"{reg['icon']}"))
+            else:
+                txt.shape(get_fqip("check-round"))
             txt.stamp()
-            txt.fd(HCHAR * len(e['description'].split('\n')))
+            txt.fd(reg["height"] / 2)
         on_screen = True
 
 def close_event():
@@ -157,12 +206,12 @@ def close_event():
         txt.clear()
         on_screen = False
 
-
 def update(data):
-    global active, alertable, evt
+    global active, alertable, evt, cleared
     today = get_events_today()
     if len(today):
         if not alertable:
+            evt.clearstamps()
             evt.shape(get_pen_shape(today))
             evt.stamp()
             alertable = True
@@ -174,11 +223,27 @@ def update(data):
         evt.clearstamps()
         alertable = False
 
+def click_event(regions, top, y):
+    global cleared
+    b = top
+    for r in regions:
+        t = b
+        b = t - r["height"]
+        if b < y and y < t:
+            if r["text"] not in cleared:
+                cleared.append(r["text"])
+            else:
+                cleared.remove(r["text"])
+
 def click(x, y):
     global active, alertable, txt
     if alertable:
         if active:
-            txt.clear()
+            (regions, boxw, boxh) = get_regions(get_events_today())
+            if abs(x) < boxw / 2 and abs(y) < boxh / 2:
+                click_event(regions, boxh / 2, y)
+                alertable = False
+            #txt.clear()
             active = False
             return False
         else:
@@ -205,17 +270,17 @@ active = False
 on_screen = False
 
 last_mod = 0
+all_cleared = False
 events = None
+cleared = []
 
 wn = evt.getscreen()
 for e in fetch_current_events():
     if 'icon' in e:
-        icon = get_fqip(f"{e['icon']}-24")
+        icon = get_fqip(f"{e['icon']}")
         if icon not in wn.getshapes():
             wn.addshape(icon)
 
-#all = expand_events(events)
-#print(all)
-
-#print(get_events(12, 3, 1))
-#print(get_events(1, 1, None))
+#wn.addshape(get_fqip("check-list"))
+#wn.addshape(get_fqip("check-square"))
+wn.addshape(get_fqip("check-round"))
