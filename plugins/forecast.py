@@ -57,8 +57,8 @@ def get_hourly_forecasts(data, idx):
         ("Pressure", f"{fc['pressure']} hPa"),
         ("PoP", f"{round_half_up(fc['pop']*100)} %" if 'pop' in fc else "--"),
         ("Rain", f"{round_half_up(fc['rain']['1h'] / 25.4, 2)} in" if "rain" in fc else "--"),
-        ("Wind", f"{round_half_up(fc['wind_speed'] * 3.6 * 0.6213712, 1)} mph"),
-        ("Gust", f"{round_half_up(fc['wind_gust'] * 3.6 * 0.6213712, 1)} mph"),
+        ("Wind", f"{round_half_up(fc['wind_speed'] * 3.6 * 0.6213712, 1)} mph" if "wind_speed" in fc else "--"),
+        ("Gust", f"{round_half_up(fc['wind_gust'] * 3.6 * 0.6213712, 1)} mph" if "wind_gust" in fc else "--"),
         #("code", f"{fc['weather'][0]['id']}")
     ]
 
@@ -152,9 +152,10 @@ def click_on(x, y):
             if touch_in_box(x, y, hours[i][0], hours[i][1], hourlyTouchSize, hourlyTouchSize):
                 hour_touched = i + 1
                 break
-    close_forecast()
-    active = True
-    last_on = time.time()
+    if hour_touched:
+        close_forecast()
+        active = True
+        last_on = time.time()
     return hour_touched
 
 def click_off(x, y):
