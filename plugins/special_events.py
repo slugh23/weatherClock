@@ -97,9 +97,12 @@ def fetch_current_events():
     return events
 
 def get_events(month, day, dow):
-    global cleared
+    global cleared, cleared_day
     all_events = fetch_current_events()
     today_events = []
+    if day != cleared_day:
+        cleared = []
+        cleared_day = day
     for e in all_events:
         if test_event(month, day, dow, e["trigger"]):
             today_events.append(e)
@@ -110,14 +113,7 @@ def get_events_today():
     day = int(time.strftime("%d"))
     dow = int(time.strftime("%w"))
     return get_events(month, day, dow)
-'''
-def toggle_event(evt):
-    desc = evt["description"]
-    if desc in cleared:
-        cleared.remove(desc)
-    else:
-        cleared.append(desc)
-'''
+
 def get_dims(message):
     line_height = len(message) * HCHAR
     height = line_height if line_height > HICON else HICON 
@@ -207,7 +203,7 @@ def close_event():
         on_screen = False
 
 def update(data):
-    global active, alertable, evt, cleared
+    global active, alertable, evt #, cleared
     today = get_events_today()
     if len(today):
         if not alertable:
@@ -243,7 +239,6 @@ def click(x, y):
             if abs(x) < boxw / 2 and abs(y) < boxh / 2:
                 click_event(regions, boxh / 2, y)
                 alertable = False
-            #txt.clear()
             active = False
             return False
         else:
@@ -270,9 +265,9 @@ active = False
 on_screen = False
 
 last_mod = 0
-all_cleared = False
 events = None
 cleared = []
+cleared_day = 0
 
 wn = evt.getscreen()
 for e in fetch_current_events():
