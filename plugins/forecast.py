@@ -47,6 +47,13 @@ def get_hourly_forecasts(data, idx):
 
     degree_sign = u"\N{DEGREE SIGN}"
 
+    precip = "rain"
+    precip_name = "Rain"
+    
+    if "snow" in fc:
+        precip = "snow"
+        precip_name = "Snow"
+    
     return [
         ("Day", dt.strftime('%A')),
         ("Hour", dt.strftime('%H:%M')),
@@ -56,7 +63,7 @@ def get_hourly_forecasts(data, idx):
         ("Humidity", f"{fc['humidity']} %"),
         ("Pressure", f"{fc['pressure']} hPa"),
         ("PoP", f"{round_half_up(fc['pop']*100)} %" if 'pop' in fc else "--"),
-        ("Rain", f"{round_half_up(fc['rain']['1h'] / 25.4, 2)} in" if "rain" in fc else "--"),
+        (f"{precip_name}", f"{round_half_up(fc[precip]['1h'] / 25.4, 2)} in" if precip in fc else "--"),
         ("Wind", f"{round_half_up(fc['wind_speed'] * 3.6 * 0.6213712, 1)} mph" if "wind_speed" in fc else "--"),
         ("Gust", f"{round_half_up(fc['wind_gust'] * 3.6 * 0.6213712, 1)} mph" if "wind_gust" in fc else "--"),
         #("code", f"{fc['weather'][0]['id']}")
@@ -159,7 +166,7 @@ def click_on(x, y):
     return hour_touched
 
 def click_off(x, y):
-    global txt, pen, val, active
+    global active
     if touch_in_box(x, y, 0, 0, 200, 200):
         close_forecast()
         active = False
