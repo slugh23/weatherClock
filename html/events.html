@@ -95,6 +95,10 @@
                 }
             ];
 
+            var numberAccessor = function(value, data, type, params, column, row){
+                return parseFloat(value);
+            }
+
             var table = new Tabulator("#example-table", {
                 //height:"311px",
                 layout:"fitDataStretch",
@@ -111,7 +115,7 @@
                         tickElement:"<strong>[X]</strong>",
                         crossElement:false,
                     }, cellClick:(e, cell)=>{}},
-                    {title:"Priority", field:"priority", sorter:"number", editor:true},
+                    {title:"Priority", field:"priority", sorter:"number", editor:true, validator:"numeric", accessorParams:{}, accessor:numberAccessor},
                     {title:"Type", field:"icon", sorter:"string", hozAlign:"left",
                         editor:"select", editorParams:{values:{"pin":"Important", "birthday":"Birthday", "holiday":"Holiday", "info":"Information"}}},
                     // Look at mutators for month...

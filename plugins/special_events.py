@@ -14,52 +14,20 @@ WICON = 64
 def get_fqip(name):
     return f"plugins/icons/events/{name}.gif"
 
-def add_event(events, month, day, dow, evt):
-    if type(month) is list:
-        for m in month:
-            add_event(events, m, day, dow, evt)
-    elif type(day) is list:
-        for d in day:
-            add_event(events, month, d, dow, evt)
-    elif type(dow) is list:
-        for n in dow:
-            add_event(events, month, day, n, evt)
-    else:
-        events.append({
-            "trigger": {
-                "month": month,
-                "day": day,
-                "dow": dow
-            },
-            "description": evt["description"],
-            "priority": evt["priority"],
-            "image": evt["image"]
-        })
+def equal_or_in(possible, value):
+    return value in possible if type(possible) is list else value == possible
 
-def expand_event(evt):
-    events = []
-    trigger = evt["trigger"]
-    month = trigger["month"] if "month" in trigger else None
-    day = trigger["day"] if "day" in trigger else None
-    dow = trigger["dow"] if "dow" in trigger else None
-    add_event(events, month, day, dow, evt)
-    return events
-
-
-def expand_events(evts):
-    expanded = []
-    for e in evts:
-        expanded.extend(expand_event(e))
-    return expanded
+def not_equal_or_in(possible, value):
+    return not equal_or_in(possible, value)
 
 def test_event(month, day, dow, trigger):
     if "disabled" in trigger and trigger["disabled"]:
         return False
-    if "month" in trigger and trigger["month"] != month:
+    if "month" in trigger and not_equal_or_in(trigger["month"], month):
         return False
-    if "day" in trigger and trigger["day"] != day:
+    if "day" in trigger and not_equal_or_in(trigger["day"], day):
         return False
-    if "dow" in trigger and trigger["dow"] != dow:
+    if "dow" in trigger and not_equal_or_in(trigger["dow"], dow):
         return False
     return True
 
