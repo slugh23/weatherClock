@@ -124,6 +124,8 @@ def clock_click(x, y):
             set_click_fcn(alerts.click)
         elif special_events.click(cursor_x, cursor_y) != None:
             set_click_fcn(special_events.click)
+        elif sun.click(cursor_x, cursor_y):
+            set_click_fcn(sun.click)
         elif forecast.click(cursor_x, cursor_y):
             set_click_fcn(forecast.click)
     else:
