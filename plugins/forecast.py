@@ -142,8 +142,11 @@ def close_forecast():
     on_screen = False
 
 def click(x, y):
-    global active
+    global active, hour_touched
     if not active:
+        if hour_touched == 1000:
+            hour_touched = False
+            return False
         return click_on(x, y)
     else:
         return click_off(x, y)
@@ -159,10 +162,12 @@ def click_on(x, y):
             if touch_in_box(x, y, hours[i][0], hours[i][1], hourlyTouchSize, hourlyTouchSize):
                 hour_touched = i + 1
                 break
+    close_forecast()
     if hour_touched:
-        close_forecast()
         active = True
         last_on = time.time()
+    else:
+        active = False
     return hour_touched
 
 def click_off(x, y):
@@ -172,7 +177,7 @@ def click_off(x, y):
         active = False
         return False
     else:
-        click_on(x, y)
+        return click_on(x, y)
     return None
 
 icon_set_name = settings.ICON_SET_NAME

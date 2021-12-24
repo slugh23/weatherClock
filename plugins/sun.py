@@ -1,7 +1,7 @@
 from datetime import datetime
 from utils import round_to_half
 from utils import touch_in_box, round_half_up
-import settings
+import time
 import turtle
 
 FontSize = 24
@@ -99,7 +99,7 @@ def draw_tomorrow(daily):
     return info
 
 def update(data):
-    global active, today, tomorrow
+    global active, today, tomorrow, last_on
     daily = data["daily"]
     if daily[0]["dt"] != today["dt"]:
         today = daily[0]
@@ -107,7 +107,12 @@ def update(data):
         pen.clear()
         draw_times()
     if active:
-        draw_text(data)
+        if time.time() - last_on < TIMEOUT:
+            draw_text(data)
+        else:
+            close_sun()
+            active = False
+            return False
 
 def close_sun():
     global active, draw, on_screen
@@ -126,32 +131,37 @@ def click(x, y):
         return click_on(x, y)
 
 def click_on(x, y):
-    global active, draw
-    print('on')
+    global active, draw, last_on
     if touch_in_box(x, y, -270, -280, 100, 100):
-        active = True
+        close_sun()
         draw = draw_today
-        return True
-    if touch_in_box(x, y, 270, -280, 100, 100):
-        active = True
+    elif touch_in_box(x, y, 270, -280, 100, 100):
+        close_sun()
         draw = draw_tomorrow
-        return True
-    return None
+    else:
+        return None
+    
+    active = True
+    last_on = time.time()
+    return True
 
 def click_off(x, y):
-    print('off')
-    if touch_in_box(x, y, 0, 0, 200, 200):
+    if not (touch_in_box(x, y, -270, -280, 100, 100) or touch_in_box(x, y, 270, -280, 100, 100)):
         close_sun()
         return False
+    else:
+        click_on(x, y)
     return None
 
 active = False
 on_screen = False
 draw = None
+last_on = 0
 
 FONT_SIZE = 18
 SPACING = 30
 HCHAR = 24
+TIMEOUT = 90
 
 # create our drawing pens
 hdr = turtle.Turtle(visible=False)

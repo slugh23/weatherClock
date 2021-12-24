@@ -132,6 +132,7 @@ def clock_click(x, y):
         if touch_fcn:
             if touch_fcn(cursor_x, cursor_y) == False:
                 set_click_fcn(None)
+                clock_click(x, y)
 
 
 def draw_clock(h, m, s, pen): # draw a clock using the pen i created
