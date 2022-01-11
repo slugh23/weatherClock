@@ -25,8 +25,7 @@ degree_sign = u"\N{DEGREE SIGN}"
 def to_string(dt):
     return datetime.fromtimestamp(dt).strftime("%H:%M")
 
-def draw_times():
-    global today, tomorrow
+def draw_times(today, tomorrow):
     pen.goto(-1 * top_x, top_y)
     pen.color("cyan")
     pen.write(str(round_to_half(today["feels_like"]["morn"])) + degree_sign, align="center", font=SunFont)
@@ -89,6 +88,13 @@ def draw_today(daily):
     ]
 
 def draw_tomorrow(daily):
+    global tomorrow
+    if tomorrow == 0:
+        return draw_tomorrow_precip(daily)
+    else:
+        return draw_tomorrow_temps(daily)
+
+def draw_tomorrow_precip(daily):
     info = [("Day", "Rain / Snow")]
     for i in range(1, 8):
         day = daily[i]
@@ -98,14 +104,24 @@ def draw_tomorrow(daily):
         ))
     return info
 
+def draw_tomorrow_temps(daily):
+    degree_sign = u"\N{DEGREE SIGN}"
+    info = [("Day", "low / High")]
+    for i in range(1, 8):
+        day = daily[i]
+        info.append((
+            datetime.fromtimestamp(day['dt']).strftime('%A'),
+            f"{round_half_up(day['temp']['min'], 1)}{degree_sign} / {round_half_up(day['temp']['max'], 1)}{degree_sign}"
+        ))
+    return info
+
 def update(data):
-    global active, today, tomorrow, last_on
+    global active, last_on, today_dt
     daily = data["daily"]
-    if daily[0]["dt"] != today["dt"]:
-        today = daily[0]
-        tomorrow = daily[1]
+    if daily[0]["dt"] != today_dt:
+        today_dt = daily[0]["dt"]
         pen.clear()
-        draw_times()
+        draw_times(daily[0], daily[1])
     if active:
         if time.time() - last_on < TIMEOUT:
             draw_text(data)
@@ -146,17 +162,24 @@ def click_on(x, y):
     return True
 
 def click_off(x, y):
+    global tomorrow
     if not (touch_in_box(x, y, -270, -280, 100, 100) or touch_in_box(x, y, 270, -280, 100, 100)):
         close_sun()
+        tomorrow = 0
         return False
     else:
         click_on(x, y)
+        tomorrow = tomorrow + 1
+        if tomorrow > 1:
+            tomorrow = 0
     return None
 
 active = False
 on_screen = False
 draw = None
 last_on = 0
+today_dt = 0
+tomorrow = 0
 
 FONT_SIZE = 18
 SPACING = 30
