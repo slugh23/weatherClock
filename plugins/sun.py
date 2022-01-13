@@ -91,8 +91,10 @@ def draw_tomorrow(daily):
     global tomorrow
     if tomorrow == 0:
         return draw_tomorrow_precip(daily)
-    else:
+    elif tomorrow == 1:
         return draw_tomorrow_temps(daily)
+    else:
+        return draw_tomorrow_wind(daily)
 
 def draw_tomorrow_precip(daily):
     info = [("Day", "Rain / Snow")]
@@ -106,12 +108,23 @@ def draw_tomorrow_precip(daily):
 
 def draw_tomorrow_temps(daily):
     degree_sign = u"\N{DEGREE SIGN}"
-    info = [("Day", "low / High")]
+    info = [("Day", "Low / High")]
     for i in range(1, 8):
         day = daily[i]
         info.append((
             datetime.fromtimestamp(day['dt']).strftime('%A'),
             f"{round_half_up(day['temp']['min'], 1)}{degree_sign} / {round_half_up(day['temp']['max'], 1)}{degree_sign}"
+        ))
+    return info
+
+def draw_tomorrow_wind(daily):
+    degree_sign = u"\N{DEGREE SIGN}"
+    info = [("Day", "Avg / Gust")]
+    for i in range(1, 8):
+        day = daily[i]
+        info.append((
+            datetime.fromtimestamp(day['dt']).strftime('%A'),
+            f"{round_half_up(day['wind_speed'] * 3.6 * 0.6213712, 1)} / {round_half_up(day['wind_gust'] * 3.6 * 0.6213712, 1)}"
         ))
     return info
 
@@ -170,7 +183,7 @@ def click_off(x, y):
     else:
         click_on(x, y)
         tomorrow = tomorrow + 1
-        if tomorrow > 1:
+        if tomorrow > 2:
             tomorrow = 0
     return None
 
