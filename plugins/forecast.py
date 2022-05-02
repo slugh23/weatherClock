@@ -100,9 +100,38 @@ def draw_weather_text(data):
     pen.pendown()
     pen.fd(height + SPACING)
 
+    hd = data['hourly'][hours_ahead] if hours_ahead < 48 else data['current']
+    if "wind_deg" in hd:
+        wind.clear()
+        draw_arrow(hd['wind_speed'], hd['wind_deg'], 235)
+        if 'wind_gust' in hd:
+            draw_arrow(hd['wind_gust'], hd['wind_deg'], 225)
 
+def draw_arrow(mps, heading, radius):
+        wind_spd = mps * 3.6 * 0.6213712
+        color = "teal"
+        if wind_spd > 25:
+            color = "red"
+        elif wind_spd > 15:
+            color = "orange"
+        wind_deg_to = heading + 180
+        wind_rad = wind_deg_to * math.pi / 180
+        (x, y) = (math.sin(wind_rad) * radius, math.cos(wind_rad) * radius)
+        wind.color("white")
+        wind.goto(x, y)
+        wind.setheading(270 - heading)
+        wind.pendown()
+        wind.color(color)
+        wind.begin_fill()
+        wind.right(150)
+        wind.forward(15)
+        wind.right(120)
+        wind.forward(15)
+        wind.right(120)
+        wind.forward(15)
+        wind.end_fill()
+        wind.penup()
 
-    
 def update(data):
     '''
     weather ID breakdown https://openweathermap.org/weather-conditions
@@ -133,12 +162,19 @@ def update(data):
             close_forecast()
             active = False
             return False
+    else:
+        if "wind_deg" in data["current"]:
+            wind.clear()
+            draw_arrow(data['current']['wind_speed'], data['current']['wind_deg'], 235)
+            if 'wind_gust' in data['current']:
+                draw_arrow(data['current']['wind_gust'], data['current']['wind_deg'], 225)
 
 def close_forecast():
     global txt, val, pen, on_screen
     txt.clear()
     val.clear()
     pen.clear()
+    wind.clear()
     on_screen = False
 
 def click(x, y):
@@ -213,3 +249,7 @@ pen = turtle.Turtle(visible=False)
 pen.pensize(3)
 pen.color("white")
 pen.setheading(270)
+
+wind = turtle.Turtle(visible=False)
+wind.penup()
+wind.color("white")
