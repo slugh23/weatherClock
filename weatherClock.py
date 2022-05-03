@@ -4,7 +4,7 @@ import json
 import requests
 import settings
 from datetime import datetime
-from utils import touch_in_box
+from utils import round_half_up
 from plugins import alerts, sun, forecast, special_events
 
 #https://www.weatherbit.io/api/codes
@@ -19,6 +19,7 @@ radius = settings.CLOCK_RADIUS
 clock_mode = True
 data = None
 current_day = None
+current_temp = None
 
 cursor_xform = 1
 if "invert-cursor" in cfg:
@@ -45,6 +46,9 @@ pen.pensize(3)
 
 dateText = turtle.Turtle(visible=False)
 dateText.penup()
+
+tempText = turtle.Turtle(visible=False)
+tempText.penup()
 
 wn = pen.getscreen()
 wn.bgcolor("black")
@@ -95,6 +99,10 @@ pen.shape(ps)
 
 touch_fcn = None
 
+def get_temperature(data):
+    temp = data['feels_like'] if 'feels_like' in data else data['temp']
+    return round_half_up(temp, 1)
+
 def set_click_fcn(function):
     global touch_fcn, clock_mode, pen, dateText
     if function is None:
@@ -102,6 +110,7 @@ def set_click_fcn(function):
     else:
         pen.clear()
         dateText.clear()
+        tempText.clear()
         clock_mode = False
     touch_fcn = function
 
@@ -203,20 +212,29 @@ while True:
     m = int(time.strftime("%M"))
     s = int(time.strftime("%S"))
     d = time.strftime("%d")
+    tfl = get_temperature(data["current"])
     
-    if d != current_day and clock_mode:
-        current_day = d
-        dateText.clear()
-        dateText.color("white")
-        dateText.setheading(270)
-        dateText.goto(186,28)
-        dateText.write(time.strftime("%b").upper(), align="center", font=("Verdana", 18, "bold"))
-        dateText.fd(68)
-        dateText.write(current_day, align="center", font=("Verdana", 48, "normal"))
-        dateText.fd(18)
-        dateText.write(time.strftime("%a").upper(), align="center", font=("Verdana", 18, "bold"))
-    elif not clock_mode:
+    if clock_mode:
+        if d != current_day:
+            current_day = d
+            dateText.clear()
+            dateText.color("white")
+            dateText.setheading(270)
+            dateText.goto(186,28)
+            dateText.write(time.strftime("%b").upper(), align="center", font=("Verdana", 18, "bold"))
+            dateText.fd(68)
+            dateText.write(current_day, align="center", font=("Verdana", 48, "normal"))
+            dateText.fd(18)
+            dateText.write(time.strftime("%a").upper(), align="center", font=("Verdana", 18, "bold"))
+        if tfl != current_temp:
+            current_temp = tfl
+            tempText.clear()
+            tempText.color("cyan")
+            tempText.goto(-160,-24)
+            tempText.write(f'{current_temp}°', align="center", font=("Verdana", 32, "normal"))
+    else:
         current_day = None
+        current_temp = None
 
     updates = [
         alerts.update(data),

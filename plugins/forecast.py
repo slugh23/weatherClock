@@ -7,6 +7,16 @@ import settings
 from datetime import datetime
 from utils import touch_in_box, round_half_up
 
+wind_colors = [
+    (69/255,117/255,180/255),
+    (116/255,173/255,209/255),
+    (171/255,217/255,233/255),
+    (224/255,243/255,248/255),
+    (254/255,224/255,144/255),
+    (253/255,174/255,97/255),
+    (244/255,109/255,67/255),
+    (215/255,48/255,39/255)
+]
 
 def initialize(screen):
     global codes, hours, bg_hours
@@ -29,7 +39,6 @@ def initialize(screen):
         bg_hours[i] = turtle.Turtle(visible=True)
         bg_hours[i].penup()
         bg_hours[i].goto(hours[i][0], hours[i][1])
-
 
 def get_image_array(hourly):
     global codes
@@ -103,34 +112,33 @@ def draw_weather_text(data):
     hd = data['hourly'][hours_ahead] if hours_ahead < 48 else data['current']
     if "wind_deg" in hd:
         wind.clear()
-        draw_arrow(hd['wind_speed'], hd['wind_deg'], 235)
+        draw_arrow(hd['wind_speed'], hd['wind_deg'], 220)
         if 'wind_gust' in hd:
-            draw_arrow(hd['wind_gust'], hd['wind_deg'], 225)
+            draw_arrow(hd['wind_gust'], hd['wind_deg'], 230)
 
 def draw_arrow(mps, heading, radius):
-        wind_spd = mps * 3.6 * 0.6213712
-        color = "teal"
-        if wind_spd > 25:
-            color = "red"
-        elif wind_spd > 15:
-            color = "orange"
-        wind_deg_to = heading + 180
-        wind_rad = wind_deg_to * math.pi / 180
-        (x, y) = (math.sin(wind_rad) * radius, math.cos(wind_rad) * radius)
-        wind.color("white")
-        wind.goto(x, y)
-        wind.setheading(270 - heading)
-        wind.pendown()
-        wind.color(color)
-        wind.begin_fill()
-        wind.right(150)
-        wind.forward(15)
-        wind.right(120)
-        wind.forward(15)
-        wind.right(120)
-        wind.forward(15)
-        wind.end_fill()
-        wind.penup()
+    wind_spd = mps * 3.6 * 0.6213712
+    wind_ci = int(wind_spd) // 10
+    if wind_ci > 7:
+        wind_ci = 7
+    color = wind_colors[wind_ci]
+    #wind_deg_to = heading + 180
+    wind_rad = heading * math.pi / 180
+    (x, y) = (math.sin(wind_rad) * radius, math.cos(wind_rad) * radius)
+    #wind.colormode(255)
+    wind.goto(x, y)
+    wind.setheading(270 - heading)
+    wind.pendown()
+    wind.color(color)
+    wind.begin_fill()
+    wind.right(150)
+    wind.forward(15)
+    wind.right(120)
+    wind.forward(15)
+    wind.right(120)
+    wind.forward(15)
+    wind.end_fill()
+    wind.penup()
 
 def update(data):
     '''
@@ -165,9 +173,9 @@ def update(data):
     else:
         if "wind_deg" in data["current"]:
             wind.clear()
-            draw_arrow(data['current']['wind_speed'], data['current']['wind_deg'], 235)
+            draw_arrow(data['current']['wind_speed'], data['current']['wind_deg'], 220)
             if 'wind_gust' in data['current']:
-                draw_arrow(data['current']['wind_gust'], data['current']['wind_deg'], 225)
+                draw_arrow(data['current']['wind_gust'], data['current']['wind_deg'], 230)
 
 def close_forecast():
     global txt, val, pen, on_screen

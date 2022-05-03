@@ -4,6 +4,11 @@ from utils import touch_in_box, round_half_up
 import time
 import turtle
 
+wind_heading = [
+    "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
+    "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"
+]
+
 FontSize = 24
 SunFont = ("Arial", FontSize, "bold")
 top_x = 270
@@ -122,9 +127,10 @@ def draw_tomorrow_wind(daily):
     info = [("Day", "Avg / Gust")]
     for i in range(1, 8):
         day = daily[i]
+        wind = wind_heading[int((day['wind_deg'] + 11.25) / 22.5) & 15]
         info.append((
             datetime.fromtimestamp(day['dt']).strftime('%A'),
-            f"{round_half_up(day['wind_speed'] * 3.6 * 0.6213712, 1)} / {round_half_up(day['wind_gust'] * 3.6 * 0.6213712, 1)}"
+            f"{round_half_up(day['wind_speed'] * 3.6 * 0.6213712, 1)} / {round_half_up(day['wind_gust'] * 3.6 * 0.6213712, 1)} {wind}"
         ))
     return info
 
