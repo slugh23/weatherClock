@@ -1,8 +1,9 @@
 import time
 import turtle
 import json
-import requests
 import settings
+import requests
+from requests.exceptions import Timeout
 from datetime import datetime
 from utils import round_half_up
 from plugins import alerts, sun, forecast, special_events
@@ -20,6 +21,7 @@ clock_mode = True
 data = None
 current_day = None
 current_temp = None
+fetch_delay = 0
 
 cursor_xform = 1
 if "invert-cursor" in cfg:
@@ -29,9 +31,8 @@ if "invert-cursor" in cfg:
 def fetch_weather_data():
     global error
     error.clearstamps()
-    print("Fetching forecast...")
     try:
-        res = requests.get(settings.WEATHER_DATA_URL)
+        res = requests.get(settings.WEATHER_DATA_URL, timeout=3.0)
         weather_data = res.json()
         with open("/tmp/weather.json", "w") as cache:
             cache.write(json.dumps(weather_data))
@@ -246,12 +247,15 @@ while True:
     if False in updates:
         set_click_fcn(None)
 
-    if m % settings.UPDATE_PERIOD == 0 and s == 0:
-        if m != last_fetch:
-            fetch = fetch_weather_data()
-            if fetch is not None:
-                last_fetch = m
-                data = fetch
+    staleness = time.time() - data['current']['dt']
+    if staleness > (settings.UPDATE_PERIOD + fetch_delay):
+        fetch = fetch_weather_data()
+        if fetch is not None:
+            fetch_delay = 0
+            data = fetch
+        else:
+            fetch_delay += (fetch_delay + 1) * 1.3
+            print(f'fetch delay: {fetch_delay}')
 
     if clock_mode:
         last_draw = s

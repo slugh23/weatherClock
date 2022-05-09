@@ -5,7 +5,7 @@ OWM_BASEURI = "https://api.openweathermap.org/data/2.5/onecall"
 OWM_EXCLUDES = "minutely,flags"
 
 ICON_SET_NAME = "owm-std"
-UPDATE_PERIOD = 10
+UPDATE_PERIOD = 10 * 60
 FONT_SIZE = 18
 
 def get_settings():
