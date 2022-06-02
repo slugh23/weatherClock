@@ -254,7 +254,7 @@ while True:
             fetch_delay = 0
             data = fetch
         else:
-            fetch_delay += 60 #(fetch_delay + 1) * 1.3
+            fetch_delay += settings.FETCH_DELAY_INCR #(fetch_delay + 1) * 1.3
             print(f'fetch delay: {fetch_delay}')
             print(f'staleness: {staleness}')
 
