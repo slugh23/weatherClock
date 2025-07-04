@@ -69,7 +69,7 @@ def get_events(month, day, dow):
     all_events = fetch_current_events()
     today_events = []
     if day != cleared_day:
-        cleared = []
+        cleared.clear()
         cleared_day = day
     for e in all_events:
         if test_event(month, day, dow, e["trigger"]):
