@@ -1,7 +1,7 @@
 import json
 
 CLOCK_RADIUS = 270
-OWM_BASEURI = "https://api.openweathermap.org/data/2.5/onecall"
+OWM_BASEURI = "https://api.openweathermap.org/data/3.0/onecall"
 OWM_EXCLUDES = "minutely,flags"
 
 ICON_SET_NAME = "owm-std"
