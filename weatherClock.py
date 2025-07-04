@@ -6,6 +6,8 @@ import settings
 from datetime import datetime
 from utils import round_half_up
 from plugins import alerts, sun, forecast, special_events
+import syslog
+
 
 #https://www.weatherbit.io/api/codes
 
@@ -29,16 +31,25 @@ if "invert-cursor" in cfg:
 def fetch_weather_data():
     global error
     error.clearstamps()
-    print("Fetching forecast...")
-    try:
-        res = requests.get(settings.WEATHER_DATA_URL)
-        weather_data = res.json()
-        with open("/tmp/weather.json", "w") as cache:
-            cache.write(json.dumps(weather_data))
-        return weather_data
-    except:
-        error.stamp()
-        return None
+    syslog.syslog(syslog.LOG_DEBUG, "Fetching forecast")
+    tries = 6
+    while tries > 0:
+        try:
+            res = requests.get(settings.WEATHER_DATA_URL)
+            syslog.syslog(syslog.LOG_DEBUG, f"Status code: {res.status_code}")
+            weather_data = res.json()
+            with open("/tmp/weather.json", "w") as cache:
+                cache.write(json.dumps(weather_data))
+            return weather_data
+        except Exception as ex:
+            syslog.syslog(syslog.LOG_ERR, f"Fetch error: {ex}")
+            tries = tries - 1
+            time.sleep(3)
+    error.stamp()
+    return None
+
+syslog.openlog(ident="wclock", logoption=syslog.LOG_PID, facility=syslog.LOG_USER)
+syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
 
 pen = turtle.Turtle(visible=False)
 pen.speed(0)
