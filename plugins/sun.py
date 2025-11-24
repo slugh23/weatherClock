@@ -10,7 +10,7 @@ wind_heading = [
 ]
 
 FontSize = 24
-SunFont = ("Arial", FontSize, "bold")
+SunFont = ("DejaVuSans", FontSize, "bold")
 top_x = 270
 top_y = -260
 spacing = 35
@@ -63,9 +63,9 @@ def draw_text(data):
         val.goto(val_x, height/2 - HCHAR/2)
 
         for line in fc:
-            hdr.write(line[0], align="right", font=("Verdana", FONT_SIZE, "bold"))
+            hdr.write(line[0], align="right", font=("DejaVuSans", FONT_SIZE, "bold"))
             hdr.fd(SPACING)
-            val.write(line[1], align="left", font=("Verdana", FONT_SIZE, "bold"))
+            val.write(line[1], align="left", font=("DejaVuSans", FONT_SIZE, "bold"))
             val.fd(SPACING)
 
         div.penup()

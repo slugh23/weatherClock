@@ -98,9 +98,9 @@ def draw_weather_text(data):
     val.goto(val_x, height/2 - HCHAR/2)
 
     for line in fc:
-        txt.write(line[0], align="right", font=("Verdana", FONT_SIZE, "bold"))
+        txt.write(line[0], align="right", font=("DejaVuSans", FONT_SIZE, "bold"))
         txt.fd(SPACING)
-        val.write(line[1], align="left", font=("Verdana", FONT_SIZE, "bold"))
+        val.write(line[1], align="left", font=("DejaVuSans", FONT_SIZE, "bold"))
         val.fd(SPACING)
 
     pen.penup()
