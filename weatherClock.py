@@ -7,6 +7,7 @@ from datetime import datetime
 from utils import round_half_up
 from plugins import alerts, sun, forecast, special_events
 import syslog
+import paho.mqtt.client as MQTT
 
 
 #https://www.weatherbit.io/api/codes
@@ -17,11 +18,17 @@ import syslog
 
 cfg = settings.settings
 
+mqtt_en = False
+if "mqtt" in cfg:
+    mqtt = cfg["mqtt"]
+    mqtt_en = mqtt["enable"]
+
 radius = settings.CLOCK_RADIUS
 clock_mode = True
 data = None
 current_day = None
 current_temp = None
+mqtt_evt = None
 
 cursor_xform = 1
 if "invert-cursor" in cfg:
@@ -57,9 +64,15 @@ pen.pensize(3)
 
 dateText = turtle.Turtle(visible=False)
 dateText.penup()
+dateFontName="DejaVuSans"
 
 tempText = turtle.Turtle(visible=False)
 tempText.penup()
+tempFont=("DejaVuSans", 32, "normal")
+
+mqttText = turtle.Turtle(visible=False)
+mqttText.penup()
+mqttFont = ("DejaVuSans", 24, "bold")
 
 wn = pen.getscreen()
 wn.bgcolor("black")
@@ -110,6 +123,29 @@ pen.shape(ps)
 
 touch_fcn = None
 
+# The callback for when the client receives a CONNACK response from the server.
+def on_konnect(client, userdata, flags, rc):
+    print(f"Connected with result code {rc}")
+    client.subscribe("rtl_433/+/events")
+
+# The callback for when a PUBLISH message is received from the server.
+def on_message(client, userdata, msg):
+    global clock_mode, mqtt_evt
+    if clock_mode:
+        evt = json.loads(msg.payload.decode())
+        mqtt_evt = evt
+
+mc = False
+def start_mqtt():
+    global mc
+    mc = MQTT.Client()
+    mc.on_connect = on_konnect
+    mc.on_message = on_message
+
+    mc.connect(mqtt["host"], mqtt["port"], mqtt["timeout"])
+    mc.loop_start()
+    pass
+
 def get_temperature(data):
     temp = data['feels_like'] if 'feels_like' in data else data['temp']
     return round_half_up(temp, 1)
@@ -122,6 +158,7 @@ def set_click_fcn(function):
         pen.clear()
         dateText.clear()
         tempText.clear()
+        mqttText.clear()
         clock_mode = False
     touch_fcn = function
 
@@ -218,56 +255,76 @@ wn.onscreenclick(clock_click)
 last_fetch = None
 last_draw = None
 
-while True:
-    h = int(time.strftime("%I"))
-    m = int(time.strftime("%M"))
-    s = int(time.strftime("%S"))
-    d = time.strftime("%d")
-    tfl = get_temperature(data["current"])
-    
-    if clock_mode:
-        if d != current_day:
-            current_day = d
-            dateText.clear()
-            dateText.color("white")
-            dateText.setheading(270)
-            dateText.goto(186,28)
-            dateText.write(time.strftime("%b").upper(), align="center", font=("Verdana", 18, "bold"))
-            dateText.fd(68)
-            dateText.write(current_day, align="center", font=("Verdana", 48, "normal"))
-            dateText.fd(18)
-            dateText.write(time.strftime("%a").upper(), align="center", font=("Verdana", 18, "bold"))
-        if tfl != current_temp:
-            current_temp = tfl
-            tempText.clear()
-            tempText.color("cyan")
-            tempText.goto(-160,-24)
-            tempText.write(f'{current_temp}°', align="center", font=("Verdana", 32, "normal"))
-    else:
-        current_day = None
-        current_temp = None
+if mqtt_en:
+    start_mqtt()
 
-    updates = [
-        alerts.update(data),
-        sun.update(data),
-        special_events.update(data),
-        forecast.update(data),
-    ]
+run = True
+try:
+    while run:
+        h = int(time.strftime("%I"))
+        m = int(time.strftime("%M"))
+        s = int(time.strftime("%S"))
+        d = time.strftime("%d")
+        tfl = get_temperature(data["current"])
+        
+        if clock_mode:
+            if d != current_day:
+                current_day = d
+                dateText.clear()
+                dateText.color("white")
+                dateText.setheading(270)
+                dateText.goto(186,28)
+                dateText.write(time.strftime("%b").upper(), align="center", font=(dateFontName, 18, "bold"))
+                dateText.fd(68)
+                dateText.write(current_day, align="center", font=(dateFontName, 48, "normal"))
+                dateText.fd(18)
+                dateText.write(time.strftime("%a").upper(), align="center", font=(dateFontName, 18, "bold"))
+            if tfl != current_temp:
+                current_temp = tfl
+                tempText.clear()
+                tempText.color("cyan")
+                tempText.goto(-160,-24)
+                tempText.write(f'{current_temp}°', align="center", font=tempFont)
+            if mqtt_evt:
+                mqttText.clear()
+                mqttText.color("white")
+                mqttText.setheading(270)
+                mqttText.goto(0,160)
+                tempC = int((mqtt_evt['temperature_F'] - 32) * 50 / 9) / 10.0
+                mqttText.write(f"{tempC}°", align="center", font=mqttFont)
+                mqttText.fd(35)
+                mqttText.write(f"{mqtt_evt['humidity']}%", align="center", font=mqttFont)
+                mqtt_evt = None
+        else:
+            current_day = None
+            current_temp = None
 
-    if False in updates:
-        set_click_fcn(None)
+        updates = [
+            alerts.update(data),
+            sun.update(data),
+            special_events.update(data),
+            forecast.update(data),
+        ]
 
-    if m % settings.UPDATE_PERIOD == 0 and s == 0:
-        if m != last_fetch:
-            fetch = fetch_weather_data()
-            if fetch is not None:
-                last_fetch = m
-                data = fetch
+        if False in updates:
+            set_click_fcn(None)
 
-    if clock_mode:
-        last_draw = s
-        pen.clear()
-        draw_clock(h, m, s, pen)
+        if m % settings.UPDATE_PERIOD == 0 and s == 0:
+            if m != last_fetch:
+                fetch = fetch_weather_data()
+                if fetch is not None:
+                    last_fetch = m
+                    data = fetch
 
-    wn.update()
-    time.sleep(0.25)
+        if clock_mode:
+            last_draw = s
+            pen.clear()
+            draw_clock(h, m, s, pen)
+
+        wn.update()
+        time.sleep(0.25)
+except KeyboardInterrupt:
+    run = False 
+ 
+if mc:
+    mc.loop_stop()
